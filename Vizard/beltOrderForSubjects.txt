@@ -1,0 +1,16 @@
+     8    16    12 Viktor
+
+randomizedOrder =
+
+    12    16     8 Helen
+     8    12    16 Joey
+    16    12     8 Meghan
+    16     8    12 Kei
+    12     8    16 Zhenyu
+     8    16    12
+     8    12    16
+     8    16    12
+    12     8    16
+    12     8    16
+     8    16    12
+    16    12     8
