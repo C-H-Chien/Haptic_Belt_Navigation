@@ -20,7 +20,7 @@ def runDirectionTest(port,numMotors, subID):
 
     #Initialize variables and Pygame Parameters
     startTime = tm.time()
-    ser = serial.Serial(port)
+    ser = serial.Serial(port, timeout=0.1)
     ser.baudrate = constants.SERIAL_BAUDRATE
     pygame.init()
     pygame.display.set_caption('Relative Haptic Intensity Test')
@@ -42,7 +42,7 @@ def runDirectionTest(port,numMotors, subID):
 
     # Loop through all directions
     while True:
-
+        
         # Update trial based on max trial time or if the subject has pressed one of the relevant keys
         #if (tm.time() - startTime >= constants.MAX_TRIAL_DURATION_DIR or hasClicked) and testStarted:
         if hasClicked and testStarted:
@@ -511,7 +511,7 @@ def checkClick(pos):
 def main():
     # Define the port, number of motors, and subject ID
     port = '/dev/tty.usbmodem11201'
-    numMotors = 8  # The number of motors present on the haptic belt. 
+    numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
 
     # Call the function to start the test
