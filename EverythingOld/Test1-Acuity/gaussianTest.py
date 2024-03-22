@@ -34,7 +34,7 @@ myfont = pygame.font.SysFont("monospace", 24)
 absolute_start = tm.time()
 start_time = tm.time() ; buzz_time = tm.time() ; cache_time = tm.time()
 direction = 0
-ser = serial.Serial('/dev/tty.usbmodem1201')
+ser = serial.Serial('/dev/tty.usbmodem11201')
 ser.baudrate = 115200
 colors = [(255, 255, 255), (0, 255, 0), (0, 0, 255)]
 directionCount = 0

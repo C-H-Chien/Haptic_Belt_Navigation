@@ -30,7 +30,7 @@ class constants:
     SAME = 0; LEFT = 1; RIGHT = 2; NEITHER = 3
 
     #Display variables
-    DISPLAY_SIZE = (1300, 850)  # Size of pygame display (width, height)
+    DISPLAY_SIZE = (1100, 750)  # Size of pygame display (width, height)
     BACKGROUND_COLOR = (0,0,0)
     TEXT_COLORS = [(0, 255, 0), (0, 0, 255), (255, 0, 0)]
     INSTRUCTIONS_COLOR = (255,255,255)
@@ -52,8 +52,8 @@ class constants:
     OUTER_RAD = 330
     INNER_RAD = 310
     ANGLE_LABEL_GAP = 20
-    RECT_WIDTH = 240
-    RECT_HEIGHT = 140
+    RECT_WIDTH = 166
+    RECT_HEIGHT = 100
     RECT_SHIFT = 3*RECT_HEIGHT/4
 
     #Define text displayed on the screen
