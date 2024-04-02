@@ -120,6 +120,7 @@ def runDirectionTest(port,numMotors, subID):
             #Check for mouse clicks
             elif event.type == pygame.QUIT:
                 updateBelt(beltOffSignal, numMotors)
+                updateBelt(stopSignal, numMotors)
                 pygame.quit()
                 sys.exit()
                 
@@ -510,7 +511,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem11201'
+    port = '/dev/tty.usbmodem1301'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
 
