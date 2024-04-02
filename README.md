@@ -4,8 +4,9 @@ This is a joint research on navigation through Haptic Belt from VEN Lab and LEMS
 ## Perception Test
 1) First download the code from `Arduino/blunoMaster` and `Arduino/#_MotorBelt_softPWM` to the arduinos connecting to PC side and belt side respectively.<br/>
 2) `DirectionPerception/directionPerception.py` automatically generate a set of angles that the belts viberate at. Change the variable 'numMotors' to fit the number of motor you have in the belt.<br/>
-3) `DirectionPerception/directionPerception.py` will generate a .txt file that records the actual viberating angle and the perceived angle, named 'DirPer_#mtr_sub#.txt'.
-4) `DirectionPerception/dirPerAnalyze.py` then take 'DirPer_#mtr_sub#.txt' file and generate results.
+3) `DirectionPerception/directionPerception.py` will generate a .txt file that records the actual viberating angle and the perceived angle, named `DirPer_#mtr_sub#.txt`. The first line of `DirPer_#mtr_sub#.txt`contains subject angle response, the second line contains the actual vibration angle and vibration scheme. Data is seperated by comma.
+4) `DirectionPerception/dirPerAnalyze.py` then take 'DirPer_#mtr_sub#.txt' file to analyze and plot the average directional error across different experimental conditions (belt types and vibration schemes) for a given subject.
+
 
 
 ## Materials
