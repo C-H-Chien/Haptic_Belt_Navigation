@@ -40,10 +40,11 @@ class constants:
 
     ######################################################################################################################
     # Direction Constants
-    WARMUP_ANGLES = [(0,0),(180,0),(90,0),(270,0),('OFF',0),(37,1),(201,1),(333,1),(103,1),('STOP',1)]
+    #WARMUP_ANGLES = [(0,0),(180,0),(90,0),(270,0),('OFF',0),(37,1),(201,1),(333,1),(103,1),('STOP',1)]
+    WARMUP_ANGLES_IMPULSE = [(0,0),(180,0),(90,0),(270,0),('OFF',0)]
     MAX_MOTORS = 16    #Used to define the number of total colocated cues
     NUM_BINS = 20      #Number of bins for the uniform, random cues
-    NUM_REPS = 1       #Number of repetitions per cue
+    NUM_REPS = 2      #Number of repetitions per cue
 
     #Define display colors and sizes
     BACKGROUND_COLOR_DIR = (255,255,255)

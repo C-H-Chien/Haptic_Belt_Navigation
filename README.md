@@ -1,6 +1,7 @@
 ## Introduction
 This is a joint research on navigation through Haptic Belt from VEN Lab and LEMS Lab at Brown University, advised under Prof. William Warren and Prof. Benjamin Kimia. The project continues the work done by Julian Volleyson and Viktor Ladics in 2020 and 2021, respectively.
-
+## How to wear the belt
+For the 8-motor belt, make sure the buckle is on the left side of the waist and arduino box on the right. Battery should be in your back.
 ## Arduino Setup
 Download the code from `Arduino/blunoMaster` and `Arduino/#_MotorBelt_softPWM` to the arduinos connecting to PC side and belt side respectively. Make sure to download the correct .ino code depending on which belt your are using. The Blunos of the same model can automatically connect to each other when turned on and don't need any manual setup. 
 <br/>

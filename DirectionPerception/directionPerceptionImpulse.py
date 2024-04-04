@@ -33,8 +33,10 @@ def runDirectionTest(port,numMotors, subID):
     degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
 
     # Determine intensity pairs and trial order
-    angles = constants.WARMUP_ANGLES + generateAngles(numMotors) #Returns a 2D array w first element being the angle and the second being the vibration scheme
+    angles = constants.WARMUP_ANGLES_IMPULSE + generateAngles(numMotors) #Returns a 2D array w first element being the angle and the second being the vibration scheme
+    #print(angles)
     print("Total trials = " + str(len(angles)))
+
 
     # Initialize other parameters
     resetTest(port, numMotors)
@@ -56,7 +58,7 @@ def runDirectionTest(port,numMotors, subID):
             vibrationCount += 1
             startTime = tm.time()
 
-            if vibrationCount >= len(constants.WARMUP_ANGLES) and warmup:
+            if vibrationCount >= len(constants.WARMUP_ANGLES_IMPULSE) and warmup:
                 warmup = False
 
             # Check if all vibrations have been tested
@@ -70,7 +72,7 @@ def runDirectionTest(port,numMotors, subID):
                 dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
                 dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
                 dataFile.write('\n')
-                dataFile.write(",".join(str(data) for data in angles[len(constants.WARMUP_ANGLES):]))  # Save angle and vibration type
+                dataFile.write(",".join(str(data) for data in angles[len(constants.WARMUP_ANGLES_IMPULSE):]))  # Save angle and vibration type
                 dataFile.write('\n')
                 dataFile.write(",".join(str(data) for data in subjectTimes))  # Save time stamps
                 dataFile.write('\n')
@@ -147,7 +149,7 @@ def generateAngles(numMotors):
     anglesDebug1 = [[] for x in range(constants.NUM_BINS)]
     ##################################################################################################################
 
-    for scheme in range(2):
+    for scheme in range(1):
         subset = []
 
         #Add colocated cues (16 total for each belt)
@@ -194,9 +196,7 @@ def generateAngles(numMotors):
 
         #print("Total trials = " + str(len(angles)))
 
-    #Randomize block order
-    random.shuffle(subsets)
-    angles = subsets[0] + subsets[1]
+    angles = subsets[0]
 
 
     #print(angles)
@@ -207,16 +207,16 @@ def generateAngles(numMotors):
     # anglesDebug1 = sum(anglesDebug1)
     # print(anglesDebug1)
     # print(uniformAngles)
-    numGauss = 0
-    numSingle = 0
-    numOther = 0
-    for i in range(len(angles)):
-        if angles[i][1] == 0:
-            numSingle += 1
-        elif angles[i][1] == 1:
-            numGauss += 1
-        else:
-            numOther += 1
+    # numGauss = 0
+    # numSingle = 0
+    # numOther = 0
+    # for i in range(len(angles)):
+    #     if angles[i][1] == 0:
+    #         numSingle += 1
+    #     elif angles[i][1] == 1:
+    #         numGauss += 1
+    #     else:
+    #         numOther += 1
 
     # print(numGauss)
     # print(numSingle)
@@ -240,7 +240,7 @@ def resetTest(port,numMotors):
     testStarted = False
     warmup = True
 
-    if len(constants.WARMUP_ANGLES) == 0:
+    if len(constants.WARMUP_ANGLES_IMPULSE) == 0:
         warmup = False
 
     #Start with belt off
@@ -426,7 +426,7 @@ def updateBelt(currAngle, numMotors):
 
     # After sending data to Arduino, wait for the confirmation
     confirmation = ser.readline() # Read the confirmation line
-    print("Arduino confirmation: ", confirmation.hex()) # Print the confirmation
+    #print("Arduino confirmation: ", confirmation.hex()) # Print the confirmation
 
 
 
@@ -512,7 +512,7 @@ def checkClick(pos):
 def main():
     # Define the port, number of motors, and subject ID
     port = '/dev/tty.usbmodem11301'
-    numMotors = 16  # The number of motors present on the haptic belt. 
+    numMotors = 12  # The number of motors present on the haptic belt. 
     subID = 2
 
     # Call the function to start the test
