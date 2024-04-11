@@ -40,8 +40,9 @@ class constants:
 
     ######################################################################################################################
     # Direction Constants
-    #WARMUP_ANGLES = [(0,0),(180,0),(90,0),(270,0),('OFF',0),(37,1),(201,1),(333,1),(103,1),('STOP',1)]
+    WARMUP_ANGLES = [(0,0),(180,0),(90,0),(270,0),('OFF',0),(37,1),(201,1),(333,1),(103,1),('STOP',1)]
     WARMUP_ANGLES_IMPULSE = [(0,0),(180,0),(90,0),(270,0),('OFF',0)]
+    WARMUP_ANGLES_GAUSSIAN = [(37,1),(201,1),(333,1),(103,1),('STOP',1)]
     MAX_MOTORS = 16    #Used to define the number of total colocated cues
     NUM_BINS = 20      #Number of bins for the uniform, random cues
     NUM_REPS = 2      #Number of repetitions per cue
@@ -75,7 +76,10 @@ class constants:
     NUM_VAR_COMBS = 2 #Number of variable combinations (2 since we just have Gaussian and single-motor vibrations)
     
     WAYPOINT_RADIUS = 0.3  # If subject is within radius (m), it counts as them having reached the waypoint
-    GAUSSIAN_SD = 25  # Standard deviation of Gaussian. Shouldn't be more than 60
+    # Standard deviation of Gaussian. Shouldn't be more than 60
+    GAUSSIAN_SD_16_1_motor = 10  
+    GAUSSIAN_SD_16_3_motor = 25  
+    GAUSSIAN_SD_16_5_motor = 45  
     GAUSSIAN_CUTOFF = 0.01  # Intensity cut off for Gaussian. Intensities below this fraction are treated as 0.
     # CANNOT BE 0! Has to allow MSG_START and MSG_END signals to be unique
 

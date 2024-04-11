@@ -33,10 +33,8 @@ def runDirectionTest(port,numMotors, subID):
     degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
 
     # Determine intensity pairs and trial order
-    angles = constants.WARMUP_ANGLES_IMPULSE + generateAngles(numMotors) #Returns a 2D array w first element being the angle and the second being the vibration scheme
-    #print(angles)
+    angles = constants.WARMUP_ANGLES_GAUSSIAN + generateAngles(numMotors) #Returns a 2D array w first element being the angle and the second being the vibration scheme
     print("Total trials = " + str(len(angles)))
-
 
     # Initialize other parameters
     resetTest(port, numMotors)
@@ -58,7 +56,7 @@ def runDirectionTest(port,numMotors, subID):
             vibrationCount += 1
             startTime = tm.time()
 
-            if vibrationCount >= len(constants.WARMUP_ANGLES_IMPULSE) and warmup:
+            if vibrationCount >= len(constants.WARMUP_ANGLES) and warmup:
                 warmup = False
 
             # Check if all vibrations have been tested
@@ -72,7 +70,7 @@ def runDirectionTest(port,numMotors, subID):
                 dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
                 dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
                 dataFile.write('\n')
-                dataFile.write(",".join(str(data) for data in angles[len(constants.WARMUP_ANGLES_IMPULSE):]))  # Save angle and vibration type
+                dataFile.write(",".join(str(data) for data in angles[len(constants.WARMUP_ANGLES):]))  # Save angle and vibration type
                 dataFile.write('\n')
                 dataFile.write(",".join(str(data) for data in subjectTimes))  # Save time stamps
                 dataFile.write('\n')
@@ -149,78 +147,36 @@ def generateAngles(numMotors):
     anglesDebug1 = [[] for x in range(constants.NUM_BINS)]
     ##################################################################################################################
 
-    for scheme in range(1):
-        subset = []
 
-        #Add colocated cues (16 total for each belt)
-        numColCues = constants.MAX_MOTORS
-        colAngles = np.linspace(0, 360, numMotors, False)
-        for angle in colAngles:
-            subset.append((angle,scheme))
-            numColCues -= 1
-            # binNum = int(round(angle / (360 / constants.NUM_BINS))) % constants.NUM_BINS
-            # anglesDebug[binNum].append(round(angle))
-            # anglesDebug1[binNum].append(round(angle))
+    angles = []
 
-        #Add remaining colocated cues randomly
-        for i in range(numColCues):
-            randInt = random.randint(0,numMotors-1)
-            subset.append((colAngles[randInt],scheme))
-            # binNum = int(round(colAngles[randInt] / (360 / constants.NUM_BINS))) % constants.NUM_BINS
-            # anglesDebug[binNum].append(round(colAngles[randInt]))
-            # anglesDebug1[binNum].append(round(colAngles[randInt]))
+    #Add colocated cues (16 total for each belt)
+    numColCues = constants.MAX_MOTORS
+    colAngles = np.linspace(0, 360, numMotors, False)
+    for angle in colAngles:
+        angles.append((angle,1))
+        numColCues -= 1
 
+    #Add remaining colocated cues randomly
+    for i in range(numColCues):
+        randInt = random.randint(0,numMotors-1)
+        angles.append((colAngles[randInt],1))
 
-        # Add uniform, randomized cues
-        uniformAngles = np.linspace(0, 360, constants.NUM_BINS, False)
-        binIncrement = 360 / constants.NUM_BINS
+    # Add uniform, randomized cues
+    uniformAngles = np.linspace(0, 360, constants.NUM_BINS, False)
+    binIncrement = 360 / constants.NUM_BINS
 
-        for rep in range(constants.NUM_REPS):
+    for rep in range(constants.NUM_REPS):
 
-            for i in range(len(uniformAngles)):
-                randNum = random.random()*binIncrement #Generates a float between 0 and binIncrement
-                angle = uniformAngles[i]+randNum-int(binIncrement/2)
-                if angle > 360:
-                    angle -= 360
-                elif angle < 0:
-                    angle += 360
-                subset.append((round(angle,2),scheme))
+        for i in range(len(uniformAngles)):
+            randNum = random.random()*binIncrement #Generates a float between 0 and binIncrement
+            angle = uniformAngles[i]+randNum-int(binIncrement/2)
+            if angle > 360:
+                angle -= 360
+            elif angle < 0:
+                angle += 360
+            angles.append((round(angle,2),1))
 
-                # binNum = int(round(angle / (360 / constants.NUM_BINS))) % constants.NUM_BINS
-                # anglesDebug[i].append(round(angle))
-                # anglesDebug1[binNum].append(round(angle))
-
-        #Randomize subset order
-        random.shuffle(subset)
-        subsets.append(subset)
-
-        #print("Total trials = " + str(len(angles)))
-
-    angles = subsets[0]
-
-
-    #print(angles)
-    # print(anglesDebug1)
-    # for i in range(len(anglesDebug1)):
-    #     anglesDebug1[i] = len(anglesDebug1[i])
-    # print(anglesDebug1)
-    # anglesDebug1 = sum(anglesDebug1)
-    # print(anglesDebug1)
-    # print(uniformAngles)
-    # numGauss = 0
-    # numSingle = 0
-    # numOther = 0
-    # for i in range(len(angles)):
-    #     if angles[i][1] == 0:
-    #         numSingle += 1
-    #     elif angles[i][1] == 1:
-    #         numGauss += 1
-    #     else:
-    #         numOther += 1
-
-    # print(numGauss)
-    # print(numSingle)
-    # print(numOther)
     return angles
 
 
@@ -240,7 +196,7 @@ def resetTest(port,numMotors):
     testStarted = False
     warmup = True
 
-    if len(constants.WARMUP_ANGLES_IMPULSE) == 0:
+    if len(constants.WARMUP_ANGLES) == 0:
         warmup = False
 
     #Start with belt off
@@ -395,18 +351,12 @@ def updateBelt(currAngle, numMotors):
 
     #Otherwise, determine which scheme to use and generate motor intensities
     else:
-        if currAngle[1] == 0: #single motor scheme
-            motorIntensities = numMotors * [0]
-            # Determine closest motor and set its intensity to 100%
-            motorToActivate = int(round(currAngle[0]/(360/numMotors)))%numMotors  # %numMotors prevents edge cases where this rounds to numMotors
-            motorIntensities[motorToActivate] = 250
 
-        elif currAngle[1] == 1: #Gaussian scheme
+        if currAngle[1] == 1: #Gaussian scheme
             # Find Gaussian distribution for the motors
-            motorIntensities = circularGaussian(numMotors, constants.GAUSSIAN_SD, currAngle[0])
+            motorIntensities = circularGaussian(numMotors, constants.GAUSSIAN_SD_16_5_motor, currAngle[0])
             # Round intensities to whole number (0-255) and set all values below 20% intensity to 0
             motorIntensities = [int(round(intensity)) for intensity in motorIntensities]
-
         else:
             print("Scheme code not recognized")
 
@@ -426,7 +376,7 @@ def updateBelt(currAngle, numMotors):
 
     # After sending data to Arduino, wait for the confirmation
     confirmation = ser.readline() # Read the confirmation line
-    #print("Arduino confirmation: ", confirmation.hex()) # Print the confirmation
+    print("Arduino confirmation: ", confirmation.hex()) # Print the confirmation
 
 
 
