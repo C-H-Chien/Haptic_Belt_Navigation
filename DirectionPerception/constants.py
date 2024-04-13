@@ -45,7 +45,7 @@ class constants:
     WARMUP_ANGLES_GAUSSIAN = [(37,1),(201,1),(333,1),(103,1),('STOP',1)]
     MAX_MOTORS = 16    #Used to define the number of total colocated cues
     NUM_BINS = 20      #Number of bins for the uniform, random cues
-    NUM_REPS = 2      #Number of repetitions per cue
+    NUM_REPS = 10      #Number of repetitions per cue
 
     #Define display colors and sizes
     BACKGROUND_COLOR_DIR = (255,255,255)
