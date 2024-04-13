@@ -141,86 +141,11 @@ def generateAngles(numMotors):
     0 - single motor, 1 - Gaussian
     """
     global constants
-    #Generate each repeat twice: once for each vibration scheme
-    subsets = []
-
-    # REMOVE AFTER DEBUGGING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    anglesDebug = [[] for x in range(constants.NUM_BINS)]
-    anglesDebug1 = [[] for x in range(constants.NUM_BINS)]
-    ##################################################################################################################
-
-    for scheme in range(1):
-        subset = []
-
-        #Add colocated cues (16 total for each belt)
-        numColCues = constants.MAX_MOTORS
+    angles = []
+    for rep in range(constants.NUM_REPS):
         colAngles = np.linspace(0, 360, numMotors, False)
         for angle in colAngles:
-            subset.append((angle,scheme))
-            numColCues -= 1
-            # binNum = int(round(angle / (360 / constants.NUM_BINS))) % constants.NUM_BINS
-            # anglesDebug[binNum].append(round(angle))
-            # anglesDebug1[binNum].append(round(angle))
-
-        #Add remaining colocated cues randomly
-        for i in range(numColCues):
-            randInt = random.randint(0,numMotors-1)
-            subset.append((colAngles[randInt],scheme))
-            # binNum = int(round(colAngles[randInt] / (360 / constants.NUM_BINS))) % constants.NUM_BINS
-            # anglesDebug[binNum].append(round(colAngles[randInt]))
-            # anglesDebug1[binNum].append(round(colAngles[randInt]))
-
-
-        # Add uniform, randomized cues
-        uniformAngles = np.linspace(0, 360, constants.NUM_BINS, False)
-        binIncrement = 360 / constants.NUM_BINS
-
-        for rep in range(constants.NUM_REPS):
-
-            for i in range(len(uniformAngles)):
-                randNum = random.random()*binIncrement #Generates a float between 0 and binIncrement
-                angle = uniformAngles[i]+randNum-int(binIncrement/2)
-                if angle > 360:
-                    angle -= 360
-                elif angle < 0:
-                    angle += 360
-                subset.append((round(angle,2),scheme))
-
-                # binNum = int(round(angle / (360 / constants.NUM_BINS))) % constants.NUM_BINS
-                # anglesDebug[i].append(round(angle))
-                # anglesDebug1[binNum].append(round(angle))
-
-        #Randomize subset order
-        random.shuffle(subset)
-        subsets.append(subset)
-
-        #print("Total trials = " + str(len(angles)))
-
-    angles = subsets[0]
-
-
-    #print(angles)
-    # print(anglesDebug1)
-    # for i in range(len(anglesDebug1)):
-    #     anglesDebug1[i] = len(anglesDebug1[i])
-    # print(anglesDebug1)
-    # anglesDebug1 = sum(anglesDebug1)
-    # print(anglesDebug1)
-    # print(uniformAngles)
-    # numGauss = 0
-    # numSingle = 0
-    # numOther = 0
-    # for i in range(len(angles)):
-    #     if angles[i][1] == 0:
-    #         numSingle += 1
-    #     elif angles[i][1] == 1:
-    #         numGauss += 1
-    #     else:
-    #         numOther += 1
-
-    # print(numGauss)
-    # print(numSingle)
-    # print(numOther)
+            angles.append((angle,0))
     return angles
 
 
