@@ -33,8 +33,9 @@ def runDirectionTest(port,numMotors, subID):
     degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
 
     # Determine intensity pairs and trial order
-    angles = constants.WARMUP_ANGLES_IMPULSE + generateAngles(numMotors) #Returns a 2D array w first element being the angle and the second being the vibration scheme
+    #angles = constants.WARMUP_ANGLES_IMPULSE + generateAngles(numMotors) #Returns a 2D array w first element being the angle and the second being the vibration scheme
     #print(angles)
+    angles = constants.WARMUP_ANGLES_IMPULSE + generateAngles(numMotors) 
     print("Total trials = " + str(len(angles)))
 
 
@@ -146,6 +147,7 @@ def generateAngles(numMotors):
         colAngles = np.linspace(0, 360, numMotors, False)
         for angle in colAngles:
             angles.append((angle,0))
+        random.shuffle(angles)
     return angles
 
 
@@ -436,7 +438,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem11101'
+    port = '/dev/tty.usbmodem1201'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
 

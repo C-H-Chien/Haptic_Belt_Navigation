@@ -3,6 +3,7 @@ import re
 import constants as c
 import statistics as stats
 from matplotlib import pyplot as plt
+from itertools import cycle
 
 def dirPerceptionAnalyze(subID):
     #Analyzes the data for subject number subID for all three belts and plots the results
@@ -10,9 +11,9 @@ def dirPerceptionAnalyze(subID):
     #Initialize 2D array w 5 subarrays. First 3 correspond to the different belts. Last 2 correspond to the vibration schemes
     #Each subarray will store the average error (initialized to -1) for that bin for each of the 5 different categories
     angleErrors_bins = []
-    angleErrors = [[] for x in range(2)]
+    angleErrors = [[] for x in range(1)]
     angles = [] #Just for debugging
-    for i in range(2):
+    for i in range(1):
         angleErrors_bins.append([[] for x in range(constants.NUM_BINS)])
         angles.append([[] for x in range(constants.NUM_BINS)])
 
@@ -37,7 +38,7 @@ def dirPerceptionAnalyze(subID):
             binNum = int(round(actualAngle/(360/constants.NUM_BINS))) % constants.NUM_BINS
             angleErrors_bins[i][binNum].append(angleError)
             angleErrors[i].append(angleError)
-            angles[i][binNum].append(actualAngle)
+            angles[i][binNum].append(subjectAngle)
 
             # if vibScheme == 0:
             #     angleErrors_bins[3][binNum].append(angleError) #Add error to single-motor array
@@ -50,9 +51,9 @@ def dirPerceptionAnalyze(subID):
             # else:
             #     numOther += 1
 
-            if i == 0: num8mtr += 1
-            elif i == 1: num12mtr += 1
-            # elif i == 2: num16mtr += 1
+            #if i == 0: num8mtr += 1
+            #elif i == 1: num12mtr += 1
+            num16mtr += 1
 
     #Iterate through errors and find the average error for each bin
     for i in range(len(angleErrors_bins)):
@@ -75,16 +76,14 @@ def dirPerceptionAnalyze(subID):
     #assert numGauss == 108, 'Incorrect number of Gaussian trials'
     #assert numSing == 108, 'Incorrect number of single-motor trials'
     #assert numOther == 0, 'Some trials are listed as neither Gaussian nor single-motor'
-    assert num8mtr == 56, 'Incorrect number of 8-motor trials'
-    assert num12mtr == 56, 'Incorrect number of 12-motor trials'
-    #assert num16mtr == 72, 'Incorrect number of 16-motor trials'
-
+    #assert num8mtr == 56, 'Incorrect number of 8-motor trials'
+    #assert num12mtr == 56, 'Incorrect number of 12-motor trials'
+    assert num16mtr == 160, 'Incorrect number of 16-motor trials'
     #Plot results
     degreeAxis = np.linspace(0, 360, constants.NUM_BINS, False)
-    titles = ["Average Direction Error: 8-motor Belt","Average Direction Error: 12-motor Belt","Average Direction Error: 16-motor Belt",\
-              "Average Direction Error: Single-Motor Vibrations","Average Direction Error: Gaussian Vibrations"]
+    titles = ["Average Direction Error: 16-motor Belt"]
     for i in range(len(angleErrors_bins)):
-        plotErrors(angleErrors_bins[i], degreeAxis, titles[i])
+        plotErrors(angleErrors_bins[i], degreeAxis, titles[i], angles[i])
 
 
 
@@ -92,10 +91,10 @@ def parseData(subID):
     # Open the files and process them into arrays
     file_8mtr = open("DirPer_8mtr_sub" + str(subID) + ".txt", 'r')
     file_12mtr = open("DirPer_12mtr_sub" + str(subID) + ".txt", 'r')
-    #file_16mtr = open("DirPer_16mtr_sub" + str(subID) + ".txt", 'r')
+    file_16mtr = open("DirPer_16mtr_sub" + str(subID) + ".txt", 'r')
 
     # Store all lines from each file in a single 2D array, element 0 is 8mtr, 1 is 12mtr, and 2 is 16mtr
-    lines = [file_8mtr.readlines(), file_12mtr.readlines()]#, file_16mtr.readlines()]
+    lines = [file_16mtr.readlines()]
     for i in range(len(lines)):
 
         # Parse first line (subject angle response)
@@ -126,15 +125,15 @@ def parseData(subID):
     return lines
 
 
-def plotErrors(angleErrors, degreeAxis, title):
+def plotErrors(angleErrors, degreeAxis, title, angles):
     #Plots the error for each bin using a polar plot
-
     #Make sure array sizes match
     assert len(angleErrors) == len(degreeAxis), "Array sizes do not match"
 
     #Define two axes based on input arrays
-    rads = [error[0] for error in angleErrors] + [angleErrors[0][0]]
+    # Convert degreeAxis to radians and complete the loop for the plot
     thetas = [(angle/180)*np.pi for angle in degreeAxis] + [0]
+    rads = [error[0] for error in angleErrors] + [angleErrors[0][0]]
 
     #Plot data
     fig = plt.figure()
@@ -142,19 +141,28 @@ def plotErrors(angleErrors, degreeAxis, title):
     ax.set_xticks(thetas)
     #ax.set_xticklabels([int(degree) for degree in degreeAxis],fontsize=10)
     ax.set_xticklabels([int(degree) for degree in degreeAxis] + [degreeAxis[0]], fontsize=10)
-    ax.set_yticks(np.linspace(0,25,6, False))
-    ax.set_yticklabels([0,5,10,15,20,25])
-    ax.set_ylim([0, 25])
+    ax.set_yticks(np.linspace(0,30,7, False))
+    ax.set_yticklabels([0,5,10,15,20,25,30])
+    ax.set_ylim([0, 30])
     ax.set_theta_direction(-1)
     ax.set_theta_zero_location('N')
     ax.set_rlabel_position(90)
-
-    print("Max: " + str(max(angleErrors)[0]))
     # Plots the data
     ax.scatter(thetas, rads, s=15)
     ax.plot(thetas,rads)
+    # Markers cycle for different sublists in angles
+    markers = cycle(['o', 's', 'D', '^', 'v', '<', '>', 'p', '*', 'h', 'H', '+', 'x'])
+    # Plot each sublist in angles
+    for sublist in angles:
+        angle_rads = [(angle/180)*np.pi for angle in sublist]
+        marker = next(markers)
+        ax.scatter(angle_rads, [max(rads) * 0.9] * len(sublist), s=30, alpha=0.75, marker=marker, label=f'Angles Set {markers}')
+
+    
     plt.title(title, y=1.08, fontsize=15)
     plt.show()
+    print("Max: " + str(max(angleErrors)[0]))
+    
 
 
 if __name__ == "__main__":
