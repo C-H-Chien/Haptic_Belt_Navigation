@@ -396,7 +396,7 @@ def main():
     # Define the port, number of motors, and subject ID
     port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
-    subID = 2
+    subID = 3
 
     # Call the function to start the test
     runDirectionTest(port, numMotors, subID)

@@ -166,5 +166,5 @@ def plotErrors(angleErrors, degreeAxis, title, angles):
 
 if __name__ == "__main__":
     constants = c.constants()
-    subID = 2
+    subID = 3
     dirPerceptionAnalyze(subID)
