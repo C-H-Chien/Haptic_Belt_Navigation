@@ -394,7 +394,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem101'
+    port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
 
