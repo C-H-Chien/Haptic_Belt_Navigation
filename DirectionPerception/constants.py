@@ -24,7 +24,9 @@ class constants:
     WARMUP_INTENSITIES = [(240,5),(40,200),(120,130),(0,40),(180,95),(1,1),(200,140),(30,70),(150,170),(255,255)]
     BINS = [(3, 193, 255), (3, 129, 192), (3, 78, 128), (3, 52, 77), (2, 39, 51),(2,27,38), (2, 14, 26), (2, 1, 13), (2, 0, 0)]  #Intensity bins
     REPS = 5                #Number of repetitions we want for each bin
-    MAX_TRIAL_DURATION = 5  #The maximum time the subject has to respond to a cue
+    MAX_TRIAL_DURATION = 3  #The maximum time the subject has to respond to a cue
+    VIBERATION_LENGTH = 2  
+    CLICK_LENGTH = 1
 
     #Codes for each condition
     SAME = 0; LEFT = 1; RIGHT = 2; NEITHER = 3

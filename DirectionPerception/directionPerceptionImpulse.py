@@ -10,18 +10,11 @@ from collections import Counter
 ###########################################################################################################################
 
 
-def runDirectionTest(port,numMotors, subID):
-    """
-    Initiates a new relative intensity test
-    """
+def runDirectionTest(port, numMotors, subID):
     global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
-        stopSignal, beltOffSignal, angles, testStarted, hasClicked, degreeAxis, lastClickTime, currAngle
+        stopSignal, beltOffSignal, angles, testStarted, warmup, hasClicked, degreeAxis, lastClickTime, currAngle, responseRecorded
 
-    #Initialize constants class
     constants = c.constants()
-
-    #Initialize variables and Pygame Parameters
-    startTime = tm.time()
     ser = serial.Serial(port, timeout=0.1)
     ser.baudrate = constants.SERIAL_BAUDRATE
     pygame.init()
@@ -30,109 +23,115 @@ def runDirectionTest(port,numMotors, subID):
     beltOffSignal = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
     stopSignal = [constants.MSG_START] + numMotors * [255] + [constants.MSG_END]
 
-    # Prepare for Gaussian vibration type
-    degreeAxis = np.linspace(0, 360, numMotors, False)
-    degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
-
-    # Determine intensity pairs and trial order
-    angles = generateAngles(numMotors) 
+    angles = generateAngles(numMotors)
     print("Total trials = " + str(len(angles)))
 
-
-    # Initialize other parameters
     resetTest(port, numMotors)
-    currAngle = angles[vibrationCount]
+    vibrationCount = 0
     validClick = True
+    motorOnTime = None  # Tracks when motors were last turned on
+    responseTimeout = None  # Timer for user response
+    responseRecorded = False  # To check if a response was recorded during the vibration period
+    acceptClick = True
 
-    # Loop through all directions
     while True:
+
+
+
+        current_time = tm.time()
         
-        # Update trial based on max trial time or if the subject has pressed one of the relevant keys
-        
+        # Turn off motors after 2 seconds
+        if motorOnTime and current_time - motorOnTime >= 2:
+            updateBelt('OFF', numMotors)  
+            acceptClick = False
+            if not responseRecorded:  # If no response was recorded, then log None
+                trackData(None)
+                print("No response recorded")
+            motorOnTime = None  # Reset the motor timer
+            responseTimeout = current_time  # Set the time for the 1-second slack before the next vibration
 
-        if hasClicked and testStarted:
+        # Begin the next motor vibration after 1 second of slack time
+        if responseTimeout and current_time - responseTimeout >= 1:
+            if vibrationCount < len(angles):
+                currAngle = angles[vibrationCount]
+                updateBelt(currAngle, numMotors)
+                print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
+                motorOnTime = current_time  # Restart motor timing for 2 seconds
+                responseTimeout = None  # Reset response timer
+                vibrationCount += 1
+                responseRecorded = False  # Reset response flag for next cycle
+                acceptClick = True
+            else:
+                recordData(numMotors, subID)
 
-            # If the full trial time expired without a response, save 'None' as the subject response
-            # if tm.time() - startTime > constants.MAX_TRIAL_DURATION:
-            #     trackData(None)
+        ev = pygame.event.get()
+        for event in ev:
+            if event.type == pygame.KEYDOWN:
+                if not testStarted and event.key == pygame.K_SPACE:
+                    startTime = tm.time()
+                    absStartTime = tm.time()
+                    testStarted = True
 
-            # Adjust variables and reset timer
-            hasClicked = False
-            vibrationCount += 1
-            startTime = tm.time()
+                    vibrationCount = 0
+                    currAngle = angles[vibrationCount]
+                    updateBelt(currAngle, numMotors)
+                    print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
+                    motorOnTime = current_time  # Restart motor timing for 2 seconds
+                    responseTimeout = None  # Reset response timer
+                    vibrationCount += 1
+                    responseRecorded = False  # Reset response flag for next cycle
 
-            # Check if all vibrations have been tested
-            if vibrationCount >= len(angles):
-                #Save total time
-                # Turn off belt
-                for num in beltOffSignal:
-                    ser.write(struct.pack('>B', num))
-
-                # Save data and exit system with a new line for each of the four data streams
-                dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
-                dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
-                dataFile.write('\n')
-                dataFile.write(",".join(str(data) for data in angles))  # Save angle and vibration type
-                dataFile.write('\n')
-                dataFile.write(",".join(str(data) for data in subjectTimes))  # Save time stamps
-                dataFile.write('\n')
-                print(round(tm.time()-absStartTime,2))
-                dataFile.write(str(round(tm.time()-absStartTime,2)))  # Save total experiment time
-                dataFile.close()
-
-                # Close pygame
+            elif event.type == pygame.QUIT:
+                updateBelt('OFF', numMotors)
                 pygame.quit()
                 sys.exit()
 
-            #Update angle
-            currAngle = angles[vibrationCount]
+            elif event.type == pygame.MOUSEBUTTONUP and not hasClicked and testStarted and acceptClick:
+                if current_time - lastClickTime >= constants.MIN_CLICK_DELAY:
+                    pos = pygame.mouse.get_pos()
+                    validClick = checkClick(pos)
+                    lastClickTime = tm.time()
+                    if validClick:
+                        hasClicked = True
+                        responseRecorded = True  # Set the flag to true if a valid click was recorded
 
-            # Update data sent to the belt
-            updateBelt(currAngle, numMotors)
+        if hasClicked and testStarted:
+            hasClicked = False
+            responseTimeout = current_time  # Wait for 1 second before starting the next motor
 
-
-        # Update display if test has been started by subject
         if testStarted:
             updateDisplay(vibrationCount, validClick)
+            
 
-        # Periodically flush the serial buffer
         if tm.time() - cacheTime > constants.BUFFER_RESET_TIME:
             ser.reset_input_buffer()
             ser.reset_output_buffer()
             cacheTime = tm.time()
 
-        # Check if any events took place
-        ev = pygame.event.get()
-        for event in ev:
-            if event.type == pygame.KEYDOWN:
+        
 
-                # Start the test once the subject presses space
-                if not testStarted and event.key == pygame.K_SPACE:
-                    startTime = tm.time()
-                    absStartTime = tm.time()
-                    updateBelt(currAngle, numMotors)
-                    testStarted = True
 
-                # Save data based on subject's response following a button press only if they have started the test
-                if testStarted:
-                    # 'P' - resets the test if needed (simpler than ending and rerunning the code manually)
-                    if event.key == pygame.K_p:
-                        resetTest(port, numMotors)
 
-            #Check for mouse clicks
-            elif event.type == pygame.QUIT:
-                updateBelt(beltOffSignal, numMotors)
-                updateBelt(stopSignal, numMotors)
-                pygame.quit()
-                sys.exit()
-                
-            elif event.type == pygame.MOUSEBUTTONUP and not hasClicked and testStarted:
+def recordData(numMotors, subID):
+    for num in beltOffSignal:
+        ser.write(struct.pack('>B', num))
 
-                #Only register clicks if they dont occur too soon after eachother
-                if tm.time() - lastClickTime >= constants.MIN_CLICK_DELAY:
-                    pos = pygame.mouse.get_pos()
-                    validClick = checkClick(pos)
-                    lastClickTime = tm.time()
+    # Save data and exit system with a new line for each of the four data streams
+    dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
+    dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
+    dataFile.write('\n')
+    dataFile.write(",".join(str(data) for data in angles))  # Save angle and vibration type
+    dataFile.write('\n')
+    dataFile.write(",".join(str(data) for data in subjectTimes))  # Save time stamps
+    dataFile.write('\n')
+    print(round(tm.time()-absStartTime,2))
+    dataFile.write(str(round(tm.time()-absStartTime,2)))  # Save total experiment time
+    dataFile.close()
+
+    # Close pygame
+    pygame.quit()
+    sys.exit()
+
 
 
 def generateAngles(numMotors):
@@ -143,7 +142,7 @@ def generateAngles(numMotors):
     global constants
     angles = []
 
-    shuffled_sequence = generate_sequence(16, 10)
+    shuffled_sequence = generate_sequence(16, 1)
     result = check_repetitions(shuffled_sequence, 10)
     print(f"All elements have exactly 10 repetitions: {result}")
     for angle in shuffled_sequence:
@@ -285,10 +284,10 @@ def updateDisplay(vibrationCount, validClick):
     global subscr, startTime, angles
     subscr.fill(constants.BACKGROUND_COLOR_DIR)
     if validClick:
-        vibText = "New Vibration"
-        vibTextSize = myBigFont.size(vibText)
+        vibText = "New Vibration, please select a point on the circle."
+        vibTextSize = myMediumFont.size(vibText)
         # Make guiding label
-        vibLabel = myBigFont.render(vibText, 1, constants.TEXT_COLORS[vibrationCount % len(constants.TEXT_COLORS)])
+        vibLabel = myMediumFont.render(vibText, 1, constants.TEXT_COLORS[vibrationCount % len(constants.TEXT_COLORS)])
     else:
         vibText = "Invalid click location, please click on the circle!"
         vibTextSize = myMediumFont.size(vibText)
@@ -310,43 +309,21 @@ def trackData(response):
 
     subjectResponse.append(response)
     subjectTimes.append(round(tm.time()-absStartTime,2))
-    print(round(tm.time()-absStartTime,2))
+    #print(round(tm.time()-absStartTime,2))
 
 
 def updateBelt(currAngle, numMotors):
-    """
-    Sends data to the belt based on the vibration angle and scheme
-    """
-    global stopSignal, beltOffSignal
-
-    print("Actual angle " + str(currAngle[0]))
-
-    #Check for STOP and OFF signals first
-    if currAngle[0] == 'STOP':
-        dataToSend = stopSignal
-    elif currAngle[0] == 'OFF':
-        dataToSend = beltOffSignal
-
-    #Otherwise, determine which scheme to use and generate motor intensities
+    if currAngle == 'OFF':
+        dataToSend = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
+    elif currAngle[1] == 0:  # single motor scheme
+        motorIntensities = numMotors * [0]
+        motorToActivate = int(round(currAngle[0] / (360 / numMotors))) % numMotors
+        motorIntensities[motorToActivate] = 250
+        dataToSend = [constants.MSG_START] + motorIntensities + [constants.MSG_END]
     else:
-        if currAngle[1] == 0: #single motor scheme
-            motorIntensities = numMotors * [0]
-            # Determine closest motor and set its intensity to 100%
-            motorToActivate = int(round(currAngle[0]/(360/numMotors)))%numMotors  # %numMotors prevents edge cases where this rounds to numMotors
-            motorIntensities[motorToActivate] = 250
-        else:
-            print("Scheme code not recognized")
+        print("Scheme code not recognized")
+        return
 
-        motorIntensities.reverse()
-        if numMotors != 8:
-            motorIntensities1 = [motorIntensities[len(motorIntensities)-1]] + motorIntensities[0:len(motorIntensities)-1]
-        else:
-            motorIntensities1 = motorIntensities
-        dataToSend = [constants.MSG_START] + motorIntensities1 + [constants.MSG_END]
-        #print(dataToSend)
-
-
-    #Send data to belt
     for num in dataToSend:
         ser.write(struct.pack('>B', num))
 
