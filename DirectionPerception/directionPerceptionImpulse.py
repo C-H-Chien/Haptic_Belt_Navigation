@@ -4,6 +4,8 @@ from pygame.locals import *
 import pygame, sys, math, random, numpy as np
 import time as tm, serial, struct
 import constants as c
+from collections import Counter
+
 
 ###########################################################################################################################
 
@@ -40,12 +42,14 @@ def runDirectionTest(port,numMotors, subID):
     # Initialize other parameters
     resetTest(port, numMotors)
     currAngle = angles[vibrationCount]
+    validClick = True
 
     # Loop through all directions
     while True:
         
         # Update trial based on max trial time or if the subject has pressed one of the relevant keys
-        #if (tm.time() - startTime >= constants.MAX_TRIAL_DURATION_DIR or hasClicked) and testStarted:
+        
+
         if hasClicked and testStarted:
 
             # If the full trial time expired without a response, save 'None' as the subject response
@@ -89,7 +93,7 @@ def runDirectionTest(port,numMotors, subID):
 
         # Update display if test has been started by subject
         if testStarted:
-            updateDisplay(vibrationCount)
+            updateDisplay(vibrationCount, validClick)
 
         # Periodically flush the serial buffer
         if tm.time() - cacheTime > constants.BUFFER_RESET_TIME:
@@ -127,7 +131,7 @@ def runDirectionTest(port,numMotors, subID):
                 #Only register clicks if they dont occur too soon after eachother
                 if tm.time() - lastClickTime >= constants.MIN_CLICK_DELAY:
                     pos = pygame.mouse.get_pos()
-                    checkClick(pos)
+                    validClick = checkClick(pos)
                     lastClickTime = tm.time()
 
 
@@ -138,12 +142,60 @@ def generateAngles(numMotors):
     """
     global constants
     angles = []
-    for rep in range(constants.NUM_REPS):
-        colAngles = np.linspace(0, 360, numMotors, False)
-        for angle in colAngles:
-            angles.append((angle,0))
-        random.shuffle(angles)
+
+    shuffled_sequence = generate_sequence(16, 10)
+    result = check_repetitions(shuffled_sequence, 10)
+    print(f"All elements have exactly 10 repetitions: {result}")
+    for angle in shuffled_sequence:
+        angles.append((angle*22.5, 0))  # Tuple (angle, scheme)
     return angles
+
+def check_repetitions(arr, required_repetitions=10):
+    # Count the occurrences of each element in the array
+    counts = Counter(arr)
+    
+    # Check if all elements have the required number of repetitions
+    for count in counts.values():
+        if count != required_repetitions:
+            return False
+    return True
+
+
+def valid_placement(sequence, num):
+    if sequence:
+        # Check last number in the sequence
+        if len(sequence) > 0 and abs(sequence[-1] - num) <= 1:
+            return False
+        # Check the second to last number if possible to avoid cycling the first and last numbers
+        if len(sequence) == 159 and abs(sequence[0] - num) <= 1:
+            return False
+    return True
+
+
+def generate_sequence(n, repetitions):
+    sequence = []
+    # Create a dictionary to keep track of the count of each number
+    num_counts = {i: repetitions for i in range(n)}
+    available_numbers = [i for i in range(n) for _ in range(repetitions)]
+
+    while available_numbers:
+        random.shuffle(available_numbers)  # Shuffle to try different numbers randomly
+        placed = False
+        for num in available_numbers:
+            if valid_placement(sequence, num) and num_counts[num] > 0:
+                sequence.append(num)
+                num_counts[num] -= 1
+                available_numbers.remove(num)
+                placed = True
+                break
+        if not placed:
+            # Reset the sequence if stuck and start over
+            sequence = []
+            num_counts = {i: repetitions for i in range(n)}
+            available_numbers = [i for i in range(n) for _ in range(repetitions)]
+
+    return sequence
+
 
 
 def resetTest(port,numMotors):
@@ -204,40 +256,13 @@ def initializeDisplay():
         #end = (outerCirc.center[0],outerCirc.center[1])
         color = constants.BACKGROUND_COLOR_DIR
 
-        #Make cardinal directions red
-        # if angle%90 == 0:
-        #     color = (255,0,0)
-
         pygame.draw.line(scr, color, start, end, 5)
-
-    # #Add lables to some of the angle markers
-    # for angle in np.linspace(0,360,2,False):
-    #     # Add label
-    #     if angle+90 >= 360:
-    #         angle -= 360
-    #
-    #     labelSize = mySmallFont.size(str(int(angle + 90)))
-    #     labelX = (constants.ANGLE_LABEL_GAP + constants.OUTER_RAD) * math.cos(angle * math.pi / 180) + \
-    #              outerCirc.center[0] - int(labelSize[0]/2)
-    #     labelY = (constants.ANGLE_LABEL_GAP + constants.OUTER_RAD) * math.sin(angle * math.pi / 180) + \
-    #              outerCirc.center[1] - int(labelSize[1]/2)
-    #     angleLabel = mySmallFont.render(str(int(angle + 90)), 1, (255, 0, 0))
-    #     scr.blit(angleLabel, (labelX, labelY))
 
     #Draw inner circle
     innerCirc = pygame.draw.circle(scr, constants.BACKGROUND_COLOR_DIR, outerCirc.center, constants.INNER_RAD)
 
-    # #Draw STOP and BELT OFF buttons
-    # stopRect = pygame.Rect((0, 0), (constants.RECT_WIDTH, constants.RECT_HEIGHT))
-    # offRect = pygame.Rect((0,0),(constants.RECT_WIDTH, constants.RECT_HEIGHT))
-    #
-    # stopRect.center = (innerCirc.center[0],innerCirc.center[1]-constants.RECT_SHIFT)
-    # offRect.center = (innerCirc.center[0],innerCirc.center[1]+constants.RECT_SHIFT)
-    # pygame.draw.rect(scr, (255, 0, 0), stopRect)
-    # pygame.draw.rect(scr, (0, 0, 255), offRect)
-
+ 
     #Add top-down human view image
-
     img = pygame.image.load('top_view_img.png').convert()
     img = pygame.transform.scale(img,(330, 274)) #Img size is normally 165, 137
     imgRect = img.get_rect()
@@ -249,39 +274,32 @@ def initializeDisplay():
     startLabel = myBigFont.render(constants.START_TEXT, 1, (255, 0, 0))
     subscr.blit(startLabel, (int(constants.DISPLAY_SIZE[0]/2 - startTextSize[0]/2), int(constants.DISPLAY_SIZE[1]/11 - startTextSize[1]/2)))
 
-    # stopTextSize = myMediumFont.size(constants.STOP_TEXT)
-    # stopLabel = myMediumFont.render(constants.STOP_TEXT,1,(255,255,255))
-    # scr.blit(stopLabel, (stopRect.center[0] - stopTextSize[0]/2, stopRect.center[1] - stopTextSize[1]/2))
-    #
-    # offTextSize = myMediumFont.size(constants.OFF_TEXT)
-    # offLabel = myMediumFont.render(constants.OFF_TEXT, 1, (255,255,255))
-    # scr.blit(offLabel, (offRect.center[0] - offTextSize[0]/2, offRect.center[1] - offTextSize[1]/2))
-
-    # instructTextSize = mySmallFont.size(constants.INSTRUCT_TEXT)
-    # instructLabel = mySmallFont.render(constants.INSTRUCT_TEXT,1,(0,0,0))
-    # scr.blit(instructLabel,(innerCirc.center[0] - instructTextSize[0]/2, innerCirc.center[1] - instructTextSize[1]/2))
-
     pygame.display.update()
 
 
 
-def updateDisplay(vibrationCount):
+def updateDisplay(vibrationCount, validClick):
     '''
     Updates the subsurface at the top of the display
     '''
     global subscr, startTime, angles
-
     subscr.fill(constants.BACKGROUND_COLOR_DIR)
-    vibText = "New Vibration"
-    vibTextSize = myBigFont.size(vibText)
-
-    # Make guiding label
-    vibLabel = myBigFont.render(vibText, 1, constants.TEXT_COLORS[vibrationCount % len(constants.TEXT_COLORS)])
+    if validClick:
+        vibText = "New Vibration"
+        vibTextSize = myBigFont.size(vibText)
+        # Make guiding label
+        vibLabel = myBigFont.render(vibText, 1, constants.TEXT_COLORS[vibrationCount % len(constants.TEXT_COLORS)])
+    else:
+        vibText = "Invalid click location, please click on the circle!"
+        vibTextSize = myMediumFont.size(vibText)
+        # Make guiding label
+        vibLabel = myMediumFont.render(vibText, 1, (0, 0, 0))
 
     # Reload labels to keep them displayed (have to this everytime?? Seems unnecessary but doesnt work otherwise)
     subscr.blit(vibLabel, (int(constants.DISPLAY_SIZE[0]/2-vibTextSize[0]/2), int(constants.DISPLAY_SIZE[1]/11-vibTextSize[1]/2)))
 
     pygame.display.update()
+
 
 
 def trackData(response):
@@ -358,16 +376,11 @@ def checkClick(pos):
     circCenter = innerCirc.center
     circleEqn = (pos[0]-circCenter[0])**2 + (pos[1]-circCenter[1])**2
     clickInCircle = circleEqn <= constants.OUTER_RAD**2 and circleEqn >= constants.INNER_RAD**2
-    # clickInStop = stopRect.collidepoint(pos)
-    # clickInOff = offRect.collidepoint(pos)
 
     # Update boolean
     hasClicked = True
     saveData = True
-    # if clickInStop:
-    #     response = 'STOP'
-    # elif clickInOff:
-    #     response = 'OFF'
+
     if clickInCircle:
 
         #Use trig to find angle (add 90 to adjust for diagram orientation)
@@ -385,16 +398,18 @@ def checkClick(pos):
         saveData = False #Dont save data
         print('Invalid click location')
 
-    #Save data if the click was valid
+    #Save data if the click was validß
     if saveData:
         trackData(response)
         print("Response angle: " + str(response))
+
+    return saveData
 
 
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem1101'
+    port = '/dev/tty.usbmodem1301'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 3
 
