@@ -6,13 +6,16 @@ import time as tm, serial, struct
 import constants as c
 from collections import Counter
 
-
 ###########################################################################################################################
 
 
 def runDirectionTest(port, numMotors, subID):
     global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
         stopSignal, beltOffSignal, angles, testStarted, warmup, hasClicked, degreeAxis, lastClickTime, currAngle, responseRecorded
+
+    # Prepare for Gaussian vibration type
+    degreeAxis = np.linspace(0, 360, numMotors, False)
+    degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
 
     constants = c.constants()
     ser = serial.Serial(port, timeout=0.1)
@@ -23,7 +26,7 @@ def runDirectionTest(port, numMotors, subID):
     beltOffSignal = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
     stopSignal = [constants.MSG_START] + numMotors * [255] + [constants.MSG_END]
 
-    angles = generateAngles(numMotors)
+    angles = generateAngles(8)
     print("Total trials = " + str(len(angles)))
 
     resetTest(port, numMotors)
@@ -36,13 +39,11 @@ def runDirectionTest(port, numMotors, subID):
 
     while True:
 
-
-
         current_time = tm.time()
         
         # Turn off motors after 2 seconds
         if motorOnTime and current_time - motorOnTime >= 2:
-            updateBelt('OFF', numMotors)  
+            updateBelt('OFF', numMotors, 3)  
             acceptClick = False
             if not responseRecorded:  # If no response was recorded, then log None
                 trackData(None)
@@ -54,7 +55,7 @@ def runDirectionTest(port, numMotors, subID):
         if responseTimeout and current_time - responseTimeout >= 1:
             if vibrationCount < len(angles):
                 currAngle = angles[vibrationCount]
-                updateBelt(currAngle, numMotors)
+                updateBelt(currAngle, numMotors, 3)
                 print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
                 motorOnTime = current_time  # Restart motor timing for 2 seconds
                 responseTimeout = None  # Reset response timer
@@ -74,7 +75,7 @@ def runDirectionTest(port, numMotors, subID):
 
                     vibrationCount = 0
                     currAngle = angles[vibrationCount]
-                    updateBelt(currAngle, numMotors)
+                    updateBelt(currAngle, numMotors, 3)
                     print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
                     motorOnTime = current_time  # Restart motor timing for 2 seconds
                     responseTimeout = None  # Reset response timer
@@ -82,7 +83,7 @@ def runDirectionTest(port, numMotors, subID):
                     responseRecorded = False  # Reset response flag for next cycle
 
             elif event.type == pygame.QUIT:
-                updateBelt('OFF', numMotors)
+                updateBelt('OFF', numMotors, 3)
                 pygame.quit()
                 sys.exit()
 
@@ -108,30 +109,6 @@ def runDirectionTest(port, numMotors, subID):
             ser.reset_output_buffer()
             cacheTime = tm.time()
 
-        
-
-
-
-def recordData(numMotors, subID):
-    for num in beltOffSignal:
-        ser.write(struct.pack('>B', num))
-
-    # Save data and exit system with a new line for each of the four data streams
-    dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
-    dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
-    dataFile.write('\n')
-    dataFile.write(",".join(str(data) for data in angles))  # Save angle and vibration type
-    dataFile.write('\n')
-    dataFile.write(",".join(str(data) for data in subjectTimes))  # Save time stamps
-    dataFile.write('\n')
-    print(round(tm.time()-absStartTime,2))
-    dataFile.write(str(round(tm.time()-absStartTime,2)))  # Save total experiment time
-    dataFile.close()
-
-    # Close pygame
-    pygame.quit()
-    sys.exit()
-
 
 
 def generateAngles(numMotors):
@@ -146,7 +123,8 @@ def generateAngles(numMotors):
     result = check_repetitions(shuffled_sequence, 10)
     print(f"All elements have exactly 10 repetitions: {result}")
     for angle in shuffled_sequence:
-        angles.append((angle*22.5, 0))  # Tuple (angle, scheme)
+        angles.append((angle*45, 1))  # Tuple (angle, scheme)
+
     return angles
 
 def check_repetitions(arr, required_repetitions=10):
@@ -197,11 +175,35 @@ def generate_sequence(n, repetitions):
 
 
 
+def recordData(numMotors, subID):
+    for num in beltOffSignal:
+        ser.write(struct.pack('>B', num))
+
+    # Save data and exit system with a new line for each of the four data streams
+    dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
+    dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
+    dataFile.write('\n')
+    dataFile.write(",".join(str(data) for data in angles))  # Save angle and vibration type
+    dataFile.write('\n')
+    dataFile.write(",".join(str(data) for data in subjectTimes))  # Save time stamps
+    dataFile.write('\n')
+    print(round(tm.time()-absStartTime,2))
+    dataFile.write(str(round(tm.time()-absStartTime,2)))  # Save total experiment time
+    dataFile.close()
+
+    # Close pygame
+    pygame.quit()
+    sys.exit()
+
+
+
+
+
 def resetTest(port,numMotors):
     """
     Restarts the test without needing to rerun the code
     """
-    global cacheTime, vibrationCount, hasClicked, testStarted, subjectResponse,subjectTimes, motorIntensities, \
+    global cacheTime, vibrationCount, hasClicked, testStarted, warmup, subjectResponse,subjectTimes, motorIntensities, \
         beltOffSignal, lastClickTime
 
 
@@ -211,6 +213,10 @@ def resetTest(port,numMotors):
     vibrationCount = 0
     hasClicked = False
     testStarted = False
+    warmup = True
+
+    if len(constants.WARMUP_ANGLES) == 0:
+        warmup = False
 
     #Start with belt off
     for num in beltOffSignal:
@@ -252,7 +258,6 @@ def initializeDisplay():
         y = constants.OUTER_RAD*math.cos(angle*math.pi/180)
         start = (outerCirc.center[0],outerCirc.center[1])
         end = (-x+outerCirc.center[0],-y+outerCirc.center[1])
-        #end = (outerCirc.center[0],outerCirc.center[1])
         color = constants.BACKGROUND_COLOR_DIR
 
         pygame.draw.line(scr, color, start, end, 5)
@@ -260,8 +265,9 @@ def initializeDisplay():
     #Draw inner circle
     innerCirc = pygame.draw.circle(scr, constants.BACKGROUND_COLOR_DIR, outerCirc.center, constants.INNER_RAD)
 
- 
+
     #Add top-down human view image
+
     img = pygame.image.load('top_view_img.png').convert()
     img = pygame.transform.scale(img,(330, 274)) #Img size is normally 165, 137
     imgRect = img.get_rect()
@@ -300,32 +306,62 @@ def updateDisplay(vibrationCount, validClick):
     pygame.display.update()
 
 
-
 def trackData(response):
     """
     Saves data to the respective array's based on the subject's response
     """
-    global subjectResponse, subjectTimes, absStartTime
+    global warmup, subjectResponse, subjectTimes, startTime
 
-    subjectResponse.append(response)
-    subjectTimes.append(round(tm.time()-absStartTime,2))
-    #print(round(tm.time()-absStartTime,2))
+    #Only save data after first warmup set is completed
+    if not warmup:
+        subjectResponse.append(response)
+        subjectTimes.append(round(tm.time()-startTime,2))
 
 
-def updateBelt(currAngle, numMotors):
+def updateBelt(currAngle, numMotors, width):
+    """
+    Sends data to the belt based on the vibration angle and scheme
+    """
+    global stopSignal, beltOffSignal
+
     if currAngle == 'OFF':
         dataToSend = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
-    elif currAngle[1] == 0:  # single motor scheme
-        motorIntensities = numMotors * [0]
-        motorToActivate = int(round(currAngle[0] / (360 / numMotors))) % numMotors
-        motorIntensities[motorToActivate] = 250
-        dataToSend = [constants.MSG_START] + motorIntensities + [constants.MSG_END]
-    else:
-        print("Scheme code not recognized")
-        return
 
+    #Otherwise, determine which scheme to use and generate motor intensities
+    else:
+        if currAngle[1] == 1: #Gaussian scheme
+            # Find Gaussian distribution for the motors
+            motorIntensities = circularGaussian(numMotors, constants.GAUSSIAN_SD_16_3_motor, currAngle[0])
+            # Round intensities to whole number (0-255) and set all values below 20% intensity to 0
+            motorIntensities = [int(round(intensity)) for intensity in motorIntensities]
+        else:
+            print("Scheme code not recognized")
+
+        #print(len(motorIntensities))
+        motorIntensities.reverse()
+        if numMotors != 8:
+            motorIntensities1 = [motorIntensities[len(motorIntensities)-1]] + motorIntensities[0:len(motorIntensities)-1]
+        else:
+            motorIntensities1 = motorIntensities
+        
+        if width==3:
+            for i in range(numMotors):
+                if motorIntensities1[i]==167:
+                    motorIntensities1[i] = 34
+                elif motorIntensities1[i] < 167:
+                    motorIntensities1[i] = 0
+        print(motorIntensities1)
+        dataToSend = [constants.MSG_START] + motorIntensities1 + [constants.MSG_END]
+        #print(dataToSend)
+
+
+    #Send data to belt
     for num in dataToSend:
         ser.write(struct.pack('>B', num))
+
+    # After sending data to Arduino, wait for the confirmation
+    confirmation = ser.readline() # Read the confirmation line
+    #print("Arduino confirmation: ", confirmation.hex()) # Print the confirmation
 
 
 
@@ -341,6 +377,18 @@ def wrapTo180(angleError):
         angleError += 360
     return angleError
 
+
+def circularGaussian(numMotors, gaussianSD, mean):
+    '''
+    Returns a numpy array with length numMotors consisting of a Guassian with standard deviation 'gaussianSD' and mean of 'mean'
+    This isn't a perfect Gaussian since it implements a sum of three Gaussians each separated by 360 degrees to make it 'circular'
+    '''
+    global degreeAxis
+    circularGaussian = 250 * np.array(
+        [np.exp(-0.5 * ((x - mean) / gaussianSD) ** 2) + np.exp(-0.5 * ((x - mean - 360) / gaussianSD) ** 2) \
+         + np.exp(-0.5 * ((x - mean + 360) / gaussianSD) ** 2) for x in degreeAxis])
+
+    return circularGaussian
 
 
 def checkClick(pos):
@@ -388,7 +436,7 @@ def main():
     # Define the port, number of motors, and subject ID
     port = '/dev/tty.usbmodem1301'
     numMotors = 16  # The number of motors present on the haptic belt. 
-    subID = 3
+    subID = 2
 
     # Call the function to start the test
     runDirectionTest(port, numMotors, subID)
