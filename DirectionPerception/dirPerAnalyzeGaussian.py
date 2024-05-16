@@ -38,7 +38,7 @@ def dirPerceptionAnalyze(subID):
                 angleError = 360 - angleError
 
             #Add the error to the correct bin for the correct belt and the correct vibration scheme
-            binNum = int(actualAngle / 22.5)
+            binNum = int(actualAngle / 45)
             print(binNum)
             
             angleErrors_bins[i][binNum].append(angleError)
@@ -75,7 +75,7 @@ def dirPerceptionAnalyze(subID):
             plt.plot(time, errors)
             plt.xlabel('Time(seconds)') 
             plt.ylabel('Error(degrees)') 
-            plt.title('Adaptation for motor at ' +str(22.5*m) + ' degrees')
+            plt.title('Adaptation for motor at ' +str(45*m) + ' degrees')
             plt.show()
             
         
@@ -84,7 +84,7 @@ def dirPerceptionAnalyze(subID):
 
 
 def parseData(subID):
-    file_16mtr = open("DirPer_16mtr_sub" + str(subID) + "_singleImpulse.txt", 'r')
+    file_16mtr = open("DirPer_16mtr_sub" + str(subID) + "_3.txt", 'r')
     lines = [file_16mtr.readlines()]
     for i in range(len(lines)):
 
@@ -156,7 +156,7 @@ def plotErrors(angleErrors, degreeAxis, title, angles):
         marker = next(markers)
         label = 'motor at ' + str(degree) + ' degree'
         ax.scatter(angle_rads, [max(rads) * 0.9] * len(sublist), s=30, alpha=0.75, marker=marker, label=label)
-        degree += 22.5
+        degree += 45
     plt.legend()
     plt.title(title, y=1.08, fontsize=15)
     plt.show()
@@ -166,5 +166,5 @@ def plotErrors(angleErrors, degreeAxis, title, angles):
 
 if __name__ == "__main__":
     constants = c.constants()
-    subID = 3
+    subID = 2
     dirPerceptionAnalyze(subID)

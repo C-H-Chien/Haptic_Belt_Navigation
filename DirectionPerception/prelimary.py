@@ -24,6 +24,7 @@ def runDirectionTest(port, numMotors, subID):
     stopSignal = [constants.MSG_START] + numMotors * [255] + [constants.MSG_END]
 
     angles = generateAngles(numMotors)
+    print(angles)
     print("Total trials = " + str(len(angles)))
 
     resetTest(port, numMotors)
@@ -55,7 +56,8 @@ def runDirectionTest(port, numMotors, subID):
                 acceptClick = True
                 vibrationCount += 1
             else:
-                recordData(numMotors, subID)
+                print("pre test finished")
+                exit(0)
 
         ev = pygame.event.get()
         for event in ev:
@@ -142,6 +144,7 @@ def generateAngles(numMotors):
     shuffled_sequence = generate_sequence(numMotors, 10)
     result = check_repetitions(shuffled_sequence, 10)
     print(f"All elements have exactly 10 repetitions: {result}")
+    shuffled_sequence = shuffled_sequence[:5]
     for angle in shuffled_sequence:
         angles.append((angle*22.5, 0))  # Tuple (angle, scheme)
     return angles
@@ -323,7 +326,7 @@ def updateBelt(currAngle, numMotors):
         else:
             print("Scheme code not recognized")
 
-        #print(len(motorIntensities))
+        print(motorIntensities)
         motorIntensities.reverse()
         if numMotors != 8:
             motorIntensities1 = [motorIntensities[len(motorIntensities)-1]] + motorIntensities[0:len(motorIntensities)-1]

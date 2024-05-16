@@ -63,7 +63,7 @@ def runDirectionTest(port, numMotors, subID, width):
                 responseRecorded = False  # Reset response flag for next cycle
                 acceptClick = True
             else:
-                recordData(numMotors, subID)
+                recordData(numMotors, subID, width)
 
         ev = pygame.event.get()
         for event in ev:
@@ -127,8 +127,9 @@ def generateAngles(numMotors):
     result = check_repetitions(shuffled_sequence, 10)
     print(f"All elements have exactly 10 repetitions: {result}")
     for angle in shuffled_sequence:
-        angles.append((angle*22.5, 1))  # Tuple (angle, scheme)
+        angles.append((angle*45, 1))  # Tuple (angle, scheme)
 
+    print(angles)
     return angles
 
 def check_repetitions(arr, required_repetitions=10):
@@ -175,16 +176,19 @@ def generate_sequence(n, repetitions):
             num_counts = {i: repetitions for i in range(n)}
             available_numbers = [i for i in range(n) for _ in range(repetitions)]
 
+
     return sequence
 
 
 
-def recordData(numMotors, subID):
+def recordData(numMotors, subID, width):
     for num in beltOffSignal:
         ser.write(struct.pack('>B', num))
 
+    print('subject response is: ' + str(subjectResponse))
+
     # Save data and exit system with a new line for each of the four data streams
-    dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) + '.txt', 'w+')
+    dataFile = open('DirPer_'+ str(numMotors) + 'mtr_sub' + str(subID) +'_' + str(width)+ '.txt', 'w+')
     dataFile.write(",".join(str(data) for data in subjectResponse))  # Save subject's response
     dataFile.write('\n')
     dataFile.write(",".join(str(data) for data in angles))  # Save angle and vibration type
@@ -314,12 +318,11 @@ def trackData(response):
     """
     Saves data to the respective array's based on the subject's response
     """
-    global warmup, subjectResponse, subjectTimes, startTime
+    global subjectResponse, subjectTimes, absStartTime
 
-    #Only save data after first warmup set is completed
-    if not warmup:
-        subjectResponse.append(response)
-        subjectTimes.append(round(tm.time()-startTime,2))
+    subjectResponse.append(response)
+    subjectTimes.append(round(tm.time()-absStartTime,2))
+    #print(round(tm.time()-absStartTime,2))
 
 
 def updateBelt(currAngle, numMotors, width):
