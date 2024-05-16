@@ -311,7 +311,7 @@ def updateBelt(currAngle, numMotors):
             motorIntensities = numMotors * [0]
             # Determine closest motor and set its intensity to 100%
             motorToActivate = int(round(currAngle[0]/(360/numMotors)))%numMotors  # %numMotors prevents edge cases where this rounds to numMotors
-            motorIntensities[motorToActivate] = 250
+            motorIntensities[motorToActivate] = 100
 
         elif currAngle[1] == 1: #Gaussian scheme
             # Find Gaussian distribution for the motors
@@ -418,7 +418,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem1101'
+    port = '/dev/tty.usbmodem1301'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
 

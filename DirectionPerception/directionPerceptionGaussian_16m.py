@@ -26,7 +26,7 @@ def runDirectionTest(port, numMotors, subID, width):
     beltOffSignal = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
     stopSignal = [constants.MSG_START] + numMotors * [255] + [constants.MSG_END]
 
-    angles = generateAngles(16)
+    angles = generateAngles(8)
     print("Total trials = " + str(len(angles)))
 
     resetTest(port, numMotors)
@@ -42,14 +42,14 @@ def runDirectionTest(port, numMotors, subID, width):
         current_time = tm.time()
         
         # Turn off motors after 2 seconds
-        if motorOnTime and current_time - motorOnTime >= 2:
+        if motorOnTime and current_time - motorOnTime >= 3:
             updateBelt('OFF', numMotors, width)  
-            acceptClick = False
-            if not responseRecorded:  # If no response was recorded, then log None
-                trackData(None)
-                print("No response recorded")
-            motorOnTime = None  # Reset the motor timer
-            responseTimeout = current_time  # Set the time for the 1-second slack before the next vibration
+            # acceptClick = False
+            # if not responseRecorded:  # If no response was recorded, then log None
+            #     trackData(None)
+            #     print("No response recorded")
+            # motorOnTime = None  # Reset the motor timer
+            # responseTimeout = current_time  # Set the time for the 1-second slack before the next vibration
 
         # Begin the next motor vibration after 1 second of slack time
         if responseTimeout and current_time - responseTimeout >= 1:
@@ -98,7 +98,11 @@ def runDirectionTest(port, numMotors, subID, width):
 
         if hasClicked and testStarted:
             hasClicked = False
+            print("valid click detected")
+            hasClicked = False
             responseTimeout = current_time  # Wait for 1 second before starting the next motor
+            acceptClick = False
+            motorOnTime = None  # Reset the motor timer
 
         if testStarted:
             updateDisplay(vibrationCount, validClick)
@@ -350,15 +354,15 @@ def updateBelt(currAngle, numMotors, width):
         if width==3:
             for i in range(numMotors):
                 if motorIntensities1[i]==167:
-                    motorIntensities1[i] = 34
+                    motorIntensities1[i] = 200
                 elif motorIntensities1[i] < 167:
                     motorIntensities1[i] = 0
         if width==5:
             for i in range(numMotors):
                 if motorIntensities1[i]==221:
-                    motorIntensities1[i] = 152
+                    motorIntensities1[i] = 200
                 elif motorIntensities1[i] == 152:
-                    motorIntensities1[i] = 34
+                    motorIntensities1[i] = 100
                 elif motorIntensities1[i] < 152:
                     motorIntensities1[i] = 0
         if width==7:
@@ -366,7 +370,7 @@ def updateBelt(currAngle, numMotors, width):
                 if motorIntensities1[i]==221:
                     motorIntensities1[i] = 0
                 elif motorIntensities1[i] == 152:
-                    motorIntensities1[i] = 34
+                    motorIntensities1[i] = 100
                 elif motorIntensities1[i] < 152:
                     motorIntensities1[i] = 0
         print(motorIntensities1)
@@ -456,10 +460,10 @@ def main():
     port = '/dev/tty.usbmodem1301'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
-    width = 7
+    width = 3
     # width = 3: 3 adjacent motors vibrating with: 34, 250, 34
     # width = 5: 5 adjacent motors vibrating with: 34, 152, 250, 152, 34
-    # width = 7: 3 motors vibrating with: 34, 0, 250, 0, 34 (so every other motor vibrates)
+    # width = 7: 3 motors vibrating with: 100, 0, 250, 0, 100 (so every other motor vibrates)
 
     # Call the function to start the test
     runDirectionTest(port, numMotors, subID, width)

@@ -37,18 +37,11 @@ def runDirectionTest(port, numMotors, subID):
     while True:
 
 
-
         current_time = tm.time()
         
         # Turn off motors after 2 seconds
-        if motorOnTime and current_time - motorOnTime >= 2:
+        if motorOnTime and current_time - motorOnTime >= 3:
             updateBelt('OFF', numMotors)  
-            acceptClick = False
-            if not responseRecorded:  # If no response was recorded, then log None
-                trackData(None)
-                print("No response recorded")
-            motorOnTime = None  # Reset the motor timer
-            responseTimeout = current_time  # Set the time for the 1-second slack before the next vibration
 
         # Begin the next motor vibration after 1 second of slack time
         if responseTimeout and current_time - responseTimeout >= 1:
@@ -96,8 +89,12 @@ def runDirectionTest(port, numMotors, subID):
                         responseRecorded = True  # Set the flag to true if a valid click was recorded
 
         if hasClicked and testStarted:
+            print("valid click detected")
             hasClicked = False
             responseTimeout = current_time  # Wait for 1 second before starting the next motor
+            acceptClick = False
+            motorOnTime = None  # Reset the motor timer
+
 
         if testStarted:
             updateDisplay(vibrationCount, validClick)
@@ -386,7 +383,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem1301'
+    port = '/dev/tty.usbmodem11301'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 3
 
