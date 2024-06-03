@@ -56,6 +56,7 @@ def runDirectionTest(port, numMotors, subID):
                 vibrationCount += 1
             else:
                 recordData(numMotors, subID)
+                print('data recorded\n')
 
         ev = pygame.event.get()
         for event in ev:
@@ -94,6 +95,7 @@ def runDirectionTest(port, numMotors, subID):
             responseTimeout = current_time  # Wait for 1 second before starting the next motor
             acceptClick = False
             motorOnTime = None  # Reset the motor timer
+            updateBelt('OFF', numMotors) 
 
 
         if testStarted:
@@ -396,7 +398,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem1301'
+    port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 3
 

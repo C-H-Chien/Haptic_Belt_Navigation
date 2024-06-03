@@ -97,12 +97,12 @@ def runDirectionTest(port, numMotors, subID, width):
                         responseRecorded = True  # Set the flag to true if a valid click was recorded
 
         if hasClicked and testStarted:
-            hasClicked = False
             print("valid click detected")
             hasClicked = False
             responseTimeout = current_time  # Wait for 1 second before starting the next motor
             acceptClick = False
             motorOnTime = None  # Reset the motor timer
+            updateBelt('OFF', numMotors, width) 
 
         if testStarted:
             updateDisplay(vibrationCount, validClick)
@@ -357,7 +357,7 @@ def updateBelt(currAngle, numMotors, width):
         if width==3:
             for i in range(numMotors):
                 if motorIntensities1[i]==167:
-                    motorIntensities1[i] = 200
+                    motorIntensities1[i] = 100
                 elif motorIntensities1[i] < 167:
                     motorIntensities1[i] = 0
         if width==5:
@@ -460,12 +460,12 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem1301'
+    port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
     subID = 2
     width = 3
-    # width = 3: 3 adjacent motors vibrating with: 34, 250, 34
-    # width = 5: 5 adjacent motors vibrating with: 34, 152, 250, 152, 34
+    # width = 3: 3 adjacent motors vibrating with: 200, 250, 200
+    # width = 5: 5 adjacent motors vibrating with: 100, 200, 250, 200, 100
     # width = 7: 3 motors vibrating with: 100, 0, 250, 0, 100 (so every other motor vibrates)
 
     # Call the function to start the test
