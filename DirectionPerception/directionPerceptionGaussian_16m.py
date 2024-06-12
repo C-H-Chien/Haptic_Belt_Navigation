@@ -5,9 +5,30 @@ import pygame, sys, math, random, numpy as np
 import time as tm, serial, struct
 import constants as c
 from collections import Counter
+import tkinter as tk
+import sys, math, random, numpy as np
+import time as tm, struct
+import constants as c
+from collections import Counter
+
 
 ###########################################################################################################################
+# Function to create pop-up for entering SubjectID
+def get_subject_id():
+    def on_submit():
+        nonlocal subject_id
+        subject_id = entry.get()
+        root.destroy()
 
+    subject_id = None
+    root = tk.Tk()
+    tk.Label(root, text="Enter Subject ID:").pack(side="top", fill="x", padx=20, pady=10)
+    entry = tk.Entry(root)
+    entry.pack(padx=20, pady=20)
+    submit_button = tk.Button(root, text="Submit", command=on_submit)
+    submit_button.pack(pady=10)
+    root.mainloop()
+    return subject_id
 
 def runDirectionTest(port, numMotors, subID, width):
     global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
@@ -459,10 +480,22 @@ def checkClick(pos):
 
 ########################################################################################################################
 def main():
+    # Initialize GUI for Subject ID
+    subID = get_subject_id()
+    if subID is None:
+        print("No Subject ID provided.")
+        sys.exit(1)
+
+    # Convert subject_id to integer if necessary
+    try:
+        subID = int(subID)
+    except ValueError:
+        print("Invalid Subject ID. Please enter a valid integer.")
+        sys.exit(1)
+
     # Define the port, number of motors, and subject ID
     port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
-    subID = 2
     width = 3
     # width = 3: 3 adjacent motors vibrating with: 200, 250, 200
     # width = 5: 5 adjacent motors vibrating with: 100, 200, 250, 200, 100
