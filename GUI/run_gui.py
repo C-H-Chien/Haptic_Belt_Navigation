@@ -6,9 +6,9 @@ def make_confidence_label_updater(question, label):
     """Create a lambda function that updates the label with the current scale value."""
     return lambda value: label.config(text=f"{question}: {int(float(value))} out of 7")
 
-def submit(name_entry, subject_number_entry, strategy_text, other_observations_text, confidence_scales, root):
+def submit(subject_number_entry, strategy_text, other_observations_text, confidence_scales, root):
     """Gather data from the UI, save it to a file, and close the application."""
-    name = name_entry.get()
+    #name = name_entry.get()
     subject_number = subject_number_entry.get()
     strategy = strategy_text.get("1.0", tk.END).strip()
     other_observations = other_observations_text.get("1.0", tk.END).strip()
@@ -21,7 +21,7 @@ def submit(name_entry, subject_number_entry, strategy_text, other_observations_t
     # Create and write to the file
     filename = f"response_{subject_number}.txt"
     with open(os.path.join(folder_path, filename), 'w') as file:
-        file.write(f"Name: {name}\n")
+        #file.write(f"Name: {name}\n")
         file.write(f"Subject Number: {subject_number}\n")
         file.write("Survey Responses:\n")
         questions = [
@@ -47,9 +47,9 @@ def main():
     bold_large_font = ('Helvetica', 12, 'bold')
 
     # Name and subject number
-    tk.Label(root, text="What's your name?").grid(row=0, column=0, padx=10, pady=10)
-    name_entry = tk.Entry(root)
-    name_entry.grid(row=0, column=1, padx=10, pady=10)
+    #tk.Label(root, text="What's your name?").grid(row=0, column=0, padx=10, pady=10)
+    #name_entry = tk.Entry(root)
+    #name_entry.grid(row=0, column=1, padx=10, pady=10)
     tk.Label(root, text="What is your subject number?").grid(row=1, column=0, padx=10, pady=10)
     subject_number_entry = tk.Entry(root)
     subject_number_entry.grid(row=1, column=1, padx=10, pady=10)
@@ -79,16 +79,16 @@ def main():
         confidence_scales.append(scale)
 
     # Text entry for strategies and observations
-    tk.Label(root, text="Did you use any particular strategy in making your responses?").grid(row=8, column=0, padx=10, pady=10)
+    tk.Label(root, text="Did you use any particular strategy in making your\nresponses? If so, please describe that strategy.").grid(row=8, column=0, padx=10, pady=10)
     strategy_text = tk.Text(root, height=4, width=40)
     strategy_text.grid(row=8, column=1, padx=10, pady=10)
 
-    tk.Label(root, text="Is there anything else you noticed about the experiment?").grid(row=9, column=0, padx=10, pady=10)
+    tk.Label(root, text="Is there anything else you noticed about the \nexperiment that you would like to share?").grid(row=9, column=0, padx=10, pady=10)
     other_observations_text = tk.Text(root, height=4, width=40)
     other_observations_text.grid(row=9, column=1, padx=10, pady=10)
 
     # Submit button
-    submit_btn = tk.Button(root, text="Submit", command=lambda: submit(name_entry, subject_number_entry, strategy_text, other_observations_text, confidence_scales, root))
+    submit_btn = tk.Button(root, text="Submit", command=lambda: submit(subject_number_entry, strategy_text, other_observations_text, confidence_scales, root))
     submit_btn.grid(row=10, columnspan=3, pady=20)
 
     root.mainloop()
