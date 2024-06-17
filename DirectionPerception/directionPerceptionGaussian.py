@@ -6,29 +6,41 @@ import time as tm, serial, struct
 import constants as c
 from collections import Counter
 import tkinter as tk
+from tkinter import messagebox
 import sys, math, random, numpy as np
 import time as tm, struct
-import constants as c
-from collections import Counter
-
+from scale_gui import  main_scaling
 
 ###########################################################################################################################
-# Function to create pop-up for entering SubjectID
-def get_subject_id():
+def get_subject_info():
     def on_submit():
-        nonlocal subject_id
-        subject_id = entry.get()
-        root.destroy()
+        nonlocal subject_id, gaussian_width
+        try:
+            subject_id = int(subject_id_entry.get())
+            gaussian_width = int(gaussian_width_entry.get())
+            root.quit()  # Exit the main loop
+        except ValueError:
+            messagebox.showerror("Invalid Input", "Please enter valid integers for both fields.")
 
     subject_id = None
+    gaussian_width = None
     root = tk.Tk()
-    tk.Label(root, text="Enter Subject ID:").pack(side="top", fill="x", padx=20, pady=10)
-    entry = tk.Entry(root)
-    entry.pack(padx=20, pady=20)
+    root.title("Input Subject Info")
+
+    tk.Label(root, text="Enter Subject ID:").pack(side="top", fill="x", padx=20, pady=5)
+    subject_id_entry = tk.Entry(root)
+    subject_id_entry.pack(padx=20, pady=5)
+
+    tk.Label(root, text="Enter Gaussian Width:").pack(side="top", fill="x", padx=20, pady=5)
+    gaussian_width_entry = tk.Entry(root)
+    gaussian_width_entry.pack(padx=20, pady=5)
+
     submit_button = tk.Button(root, text="Submit", command=on_submit)
     submit_button.pack(pady=10)
+
     root.mainloop()
-    return subject_id
+    return subject_id, gaussian_width
+
 
 def runDirectionTest(port, numMotors, subID, width):
     global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
@@ -481,7 +493,7 @@ def checkClick(pos):
 ########################################################################################################################
 def main():
     # Initialize GUI for Subject ID
-    subID = get_subject_id()
+    subID, width = get_subject_info()
     if subID is None:
         print("No Subject ID provided.")
         sys.exit(1)
@@ -493,17 +505,28 @@ def main():
         print("Invalid Subject ID. Please enter a valid integer.")
         sys.exit(1)
 
+    if width is None:
+        print("No width provided.")
+        sys.exit(1)
+
+    # Convert subject_id to integer if necessary
+    try:
+        width = int(width)
+    except ValueError:
+        print("Invalid width. Please enter a valid integer.")
+        sys.exit(1)
+
     # Define the port, number of motors, and subject ID
     port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
-    width = 3
     # width = 3: 3 adjacent motors vibrating with: 200, 250, 200
     # width = 5: 5 adjacent motors vibrating with: 100, 200, 250, 200, 100
     # width = 7: 3 motors vibrating with: 100, 0, 250, 0, 100 (so every other motor vibrates)
 
     # Call the function to start the test
+    experiment_type = "gauss_"+str(width)
     runDirectionTest(port, numMotors, subID, width)
-
+    main_scaling(subID, experiment_type)    
 
 if __name__ == "__main__":
     main()

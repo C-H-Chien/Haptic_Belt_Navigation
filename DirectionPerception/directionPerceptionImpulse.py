@@ -8,29 +8,9 @@ from collections import Counter
 import tkinter as tk
 import sys, math, random, numpy as np
 import time as tm, struct
-import constants as c
-from collections import Counter
+from scale_gui import get_subject_id, main_scaling
 
 ###########################################################################################################################
-
-
-# Function to create pop-up for entering SubjectID
-def get_subject_id():
-    def on_submit():
-        nonlocal subject_id
-        subject_id = entry.get()
-        root.destroy()
-
-    subject_id = None
-    root = tk.Tk()
-    tk.Label(root, text="Enter Subject ID:").pack(side="top", fill="x", padx=20, pady=10)
-    entry = tk.Entry(root)
-    entry.pack(padx=20, pady=20)
-    submit_button = tk.Button(root, text="Submit", command=on_submit)
-    submit_button.pack(pady=10)
-    root.mainloop()
-    return subject_id
-
 
 
 def runDirectionTest(port, numMotors, subID):
@@ -439,6 +419,9 @@ def main():
 
     # Call the function to start the test
     runDirectionTest(port, numMotors, subID)
+    experiment_type = "impulse"
+
+    main_scaling(subID, experiment_type)
 
 if __name__ == "__main__":
     main()
