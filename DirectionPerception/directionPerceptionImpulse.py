@@ -13,9 +13,6 @@ from scale_gui import get_subject_id, main_scaling
 
 ###########################################################################################################################
 
-
-
-
 def runDirectionTest(port, numMotors, subID):
    global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
        stopSignal, beltOffSignal, angles, testStarted, warmup, hasClicked, degreeAxis, lastClickTime, currAngle, responseRecorded
@@ -46,9 +43,6 @@ def runDirectionTest(port, numMotors, subID):
 
 
    while True:
-
-
-
 
        current_time = tm.time()
       
@@ -112,8 +106,6 @@ def runDirectionTest(port, numMotors, subID):
                    print("invalid click")
 
 
-
-
            if hasClicked and testStarted:
                print("valid click detected")
                hasClicked = False
@@ -122,24 +114,14 @@ def runDirectionTest(port, numMotors, subID):
                motorOnTime = None  # Reset the motor timer
                updateBelt('OFF', numMotors)
 
-
-
-
        if testStarted:
            updateDisplay(vibrationCount, validClick)
           
-
 
        if tm.time() - cacheTime > constants.BUFFER_RESET_TIME:
            ser.reset_input_buffer()
            ser.reset_output_buffer()
            cacheTime = tm.time()
-
-
-      
-
-
-
 
 
 
@@ -166,8 +148,6 @@ def recordData(numMotors, subID):
    experiment_type = "impulse"
    main_scaling(subID, experiment_type)
    sys.exit()
-
-
 
 
 

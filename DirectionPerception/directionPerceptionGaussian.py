@@ -43,108 +43,113 @@ def get_subject_info():
 
 
 def runDirectionTest(port, numMotors, subID, width):
-    global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
-        stopSignal, beltOffSignal, angles, testStarted, warmup, hasClicked, degreeAxis, lastClickTime, currAngle, responseRecorded
+   global constants, ser, startTime, absStartTime, cacheTime, mySmallFont, myBigFont, vibrationCount, \
+       stopSignal, beltOffSignal, angles, testStarted, warmup, hasClicked, degreeAxis, lastClickTime, currAngle, responseRecorded
 
-    # Prepare for Gaussian vibration type
-    degreeAxis = np.linspace(0, 360, numMotors, False)
-    degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
 
-    constants = c.constants()
-    ser = serial.Serial(port, timeout=0.1)
-    ser.baudrate = constants.SERIAL_BAUDRATE
-    pygame.init()
-    pygame.display.set_caption('Relative Haptic Intensity Test')
+   constants = c.constants()
+   ser = serial.Serial(port, timeout=0.1)
+   ser.baudrate = constants.SERIAL_BAUDRATE
+   pygame.init()
+   pygame.display.set_caption('Relative Haptic Intensity Test')
 
-    beltOffSignal = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
-    stopSignal = [constants.MSG_START] + numMotors * [255] + [constants.MSG_END]
 
-    angles = generateAngles(8)
-    print("Total trials = " + str(len(angles)))
+   beltOffSignal = [constants.MSG_START] + numMotors * [0] + [constants.MSG_END]
+   stopSignal = [constants.MSG_START] + numMotors * [255] + [constants.MSG_END]
 
-    resetTest(port, numMotors)
-    vibrationCount = 0
-    validClick = True
-    motorOnTime = None  # Tracks when motors were last turned on
-    responseTimeout = None  # Timer for user response
-    responseRecorded = False  # To check if a response was recorded during the vibration period
-    acceptClick = True
 
-    while True:
+   angles = generateAngles(numMotors)
+   print("Total trials = " + str(len(angles)))
 
-        current_time = tm.time()
-        
-        # Turn off motors after 2 seconds
-        if motorOnTime and current_time - motorOnTime >= 3:
-            updateBelt('OFF', numMotors, width)  
-            # acceptClick = False
-            # if not responseRecorded:  # If no response was recorded, then log None
-            #     trackData(None)
-            #     print("No response recorded")
-            # motorOnTime = None  # Reset the motor timer
-            # responseTimeout = current_time  # Set the time for the 1-second slack before the next vibration
 
-        # Begin the next motor vibration after 1 second of slack time
-        if responseTimeout and current_time - responseTimeout >= 1:
-            if vibrationCount < len(angles):
-                currAngle = angles[vibrationCount]
-                updateBelt(currAngle, numMotors, width)
-                print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
-                motorOnTime = current_time  # Restart motor timing for 2 seconds
-                responseTimeout = None  # Reset response timer
-                vibrationCount += 1
-                responseRecorded = False  # Reset response flag for next cycle
-                acceptClick = True
-            else:
-                recordData(numMotors, subID, width)
+   resetTest(port, numMotors)
+   vibrationCount = 0
+   validClick = True
+   motorOnTime = None  # Tracks when motors were last turned on
+   responseTimeout = None  # Timer for user response
+   responseRecorded = False  # To check if a response was recorded during the vibration period
+   acceptClick = False
 
-        ev = pygame.event.get()
-        for event in ev:
-            if event.type == pygame.KEYDOWN:
-                if not testStarted and event.key == pygame.K_SPACE:
-                    startTime = tm.time()
-                    absStartTime = tm.time()
-                    testStarted = True
 
-                    vibrationCount = 0
-                    currAngle = angles[vibrationCount]
-                    updateBelt(currAngle, numMotors, width)
-                    print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
-                    motorOnTime = current_time  # Restart motor timing for 2 seconds
-                    responseTimeout = None  # Reset response timer
-                    vibrationCount += 1
-                    responseRecorded = False  # Reset response flag for next cycle
+   while True:
 
-            elif event.type == pygame.QUIT:
-                updateBelt('OFF', numMotors, width)
-                pygame.quit()
-                sys.exit()
+       current_time = tm.time()
+      
+       # Turn off motors after 3 seconds
+       if motorOnTime and current_time - motorOnTime >= 2:
+           updateBelt('OFF', numMotors, width) 
+           acceptClick = True
 
-            elif event.type == pygame.MOUSEBUTTONUP and not hasClicked and testStarted and acceptClick:
-                if current_time - lastClickTime >= constants.MIN_CLICK_DELAY:
-                    pos = pygame.mouse.get_pos()
-                    validClick = checkClick(pos)
-                    lastClickTime = tm.time()
-                    if validClick:
-                        hasClicked = True
-                        responseRecorded = True  # Set the flag to true if a valid click was recorded
 
-        if hasClicked and testStarted:
-            print("valid click detected")
-            hasClicked = False
-            responseTimeout = current_time  # Wait for 1 second before starting the next motor
-            acceptClick = False
-            motorOnTime = None  # Reset the motor timer
-            updateBelt('OFF', numMotors, width) 
+       # Begin the next motor vibration after 1 second of slack time
+       if responseTimeout and current_time - responseTimeout >= 1:
+           if vibrationCount < len(angles):
+               currAngle = angles[vibrationCount]
+               updateBelt(currAngle, numMotors, width)
+               print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
+               motorOnTime = current_time  # Restart motor timing for 3 seconds
+               responseTimeout = None  # Reset response timer
+               responseRecorded = False  # Reset response flag for next cycle
+               vibrationCount += 1
+               acceptClick = False
+           else:
+               recordData(numMotors, subID, width)
+               print('data recorded\n')
 
-        if testStarted:
-            updateDisplay(vibrationCount, validClick)
-            
 
-        if tm.time() - cacheTime > constants.BUFFER_RESET_TIME:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-            cacheTime = tm.time()
+       ev = pygame.event.get()
+       for event in ev:
+           if event.type == pygame.KEYDOWN:
+               if not testStarted and event.key == pygame.K_SPACE:
+                   startTime = tm.time()
+                   absStartTime = tm.time()
+                   testStarted = True
+
+                   vibrationCount = 0
+                   currAngle = angles[vibrationCount]
+                   updateBelt(currAngle, numMotors, width)
+                   print("current angle is: " + str(currAngle) + ", viberation count is: " + str(vibrationCount))
+                   motorOnTime = current_time  # Restart motor timing for 2 seconds
+                   responseTimeout = None  # Reset response timer
+                   vibrationCount += 1
+                   acceptClick = False
+                   responseRecorded = False  # Reset response flag for next cycle
+
+
+           elif event.type == pygame.QUIT:
+               updateBelt('OFF', numMotors, width)
+               pygame.quit()
+               sys.exit()
+
+
+           elif event.type == pygame.MOUSEBUTTONUP and not hasClicked and testStarted:
+               if acceptClick and current_time - lastClickTime >= constants.MIN_CLICK_DELAY:
+                   pos = pygame.mouse.get_pos()
+                   validClick = checkClick(pos)
+                   lastClickTime = tm.time()
+                   if validClick:
+                       hasClicked = True
+                       responseRecorded = True  # Set the flag to true if a valid click was recorded
+               else:
+                   print("invalid click")
+
+
+           if hasClicked and testStarted:
+               print("valid click detected")
+               hasClicked = False
+               responseTimeout = current_time  # Wait for 1 second before starting the next motor
+               acceptClick = False
+               motorOnTime = None  # Reset the motor timer
+               updateBelt('OFF', numMotors, width)
+
+       if testStarted:
+           updateDisplay(vibrationCount, validClick)
+          
+
+       if tm.time() - cacheTime > constants.BUFFER_RESET_TIME:
+           ser.reset_input_buffer()
+           ser.reset_output_buffer()
+           cacheTime = tm.time()
 
 
 
