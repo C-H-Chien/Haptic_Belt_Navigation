@@ -447,7 +447,10 @@ def circularGaussian(numMotors, gaussianSD, mean):
     Returns a numpy array with length numMotors consisting of a Guassian with standard deviation 'gaussianSD' and mean of 'mean'
     This isn't a perfect Gaussian since it implements a sum of three Gaussians each separated by 360 degrees to make it 'circular'
     '''
-    global degreeAxis
+    # global degreeAxis
+    # Prepare for Gaussian vibration type
+    degreeAxis = np.linspace(0, 360, numMotors, False)
+    degreeAxis = [wrapTo180(degree) for degree in degreeAxis]
     circularGaussian = 250 * np.array(
         [np.exp(-0.5 * ((x - mean) / gaussianSD) ** 2) + np.exp(-0.5 * ((x - mean - 360) / gaussianSD) ** 2) \
          + np.exp(-0.5 * ((x - mean + 360) / gaussianSD) ** 2) for x in degreeAxis])
@@ -522,7 +525,7 @@ def main():
         sys.exit(1)
 
     # Define the port, number of motors, and subject ID
-    port = '/dev/tty.usbmodem1101'
+    port = '/dev/ttyACM0'
     numMotors = 16  # The number of motors present on the haptic belt. 
     # width = 3: 3 adjacent motors vibrating with: 200, 250, 200
     # width = 5: 5 adjacent motors vibrating with: 100, 200, 250, 200, 100
