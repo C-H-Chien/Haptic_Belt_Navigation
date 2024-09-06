@@ -11,15 +11,15 @@ from pygame.locals import *
 import pygame, sys, math, numpy as np
 import time as tm, serial, struct, random
 
+
 # Sets up Pygame Parameters
 pygame.init()
 scr = pygame.display.set_mode((720, 720))
 myfont = pygame.font.SysFont('monospace', 24)
-
 # Sets up variables
 absolute_start = tm.time()
 start_time = tm.time() ; cache_time = tm.time()
-ser = serial.Serial('/dev/cu.usbmodem14201')
+ser = serial.Serial('/dev/tty.usbmodem1301')
 ser.baudrate = 115200
 colors = [(255, 255, 255), (0,255,0), (0,0,255)]
 vibrationCount = 0 ; runCount = -1
@@ -36,7 +36,7 @@ numMotors = 12
 combos = [(0,5), (0,4), (0,3), (0,2), (0,1), (1,5), (1,4), (1,3), (1,2), (2,5), (2,4), (2,3), (3,5), (3,4), (4,5),
 (5,0),(4,0),(3,0),(2,0),(1,0),(5,1), (4,1), (3,1), (2,1), (5,2), (4,2), (3,2), (5,3), (4,3), (5,4)]
 random.shuffle(combos)
-
+intensities = combos[runCount]
 while True:
     # Handles the visual display on the screen
     # --------------------------------------------------------------------------
@@ -60,7 +60,7 @@ while True:
             np.save('rightStrength.npy', strengthRight)
             pygame.quit()
             sys.exit()
-        intensities = combos[runCount]
+        #intensities = combos[runCount]
         directionsToSend = [255]
         if intensities[0] == 5:
             directionsToSend.append(2)
