@@ -12,6 +12,10 @@ Download the code from `Arduino/blunoMaster` and `Arduino/#_MotorBelt_softPWM` t
 3) `DirectionPerception/directionPerception.py` will generate a .txt file that records the actual viberating angle and the perceived angle, named `DirPer_#mtr_sub#.txt`. The first line of `DirPer_#mtr_sub#.txt`contains subject angle response, the second line contains the actual vibration angle and vibration scheme. Data is seperated by comma.
 4) `DirectionPerception/dirPerAnalyze.py` then take `DirPer_8mtr_sub#.txt`, `DirPer_12mtr_sub#.txt`, and `DirPer_16mtr_sub#.txt` file to analyze and plot the average directional error across different experimental conditions (belt types and vibration schemes) for a given subject. There should be 3 plots generated from running this code.
 
+## Open Loop (Discrete Control Navigation)
+
+
+## Closed Loop (Continuous Feedback Navigation)
 
 
 ## Materials
