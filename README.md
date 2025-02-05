@@ -17,7 +17,7 @@ In this experiment, participants navigated through seven waypoints using only be
 
 
 ## Closed Loop (Continuous Feedback Navigation)
-
+This experiment evaluated continuous feedback navigation using haptic belts, where vibrational cues were updated every 0.4 seconds based on the user's position.
 
 ## Materials
 - ``EverythingOld``: Julian's and Viktor's thesis. Julian's thesis presentation slides and Jame's project review slides. Also some code used for testing. <br />
