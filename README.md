@@ -13,6 +13,7 @@ Download the code from `Arduino/blunoMaster` and `Arduino/#_MotorBelt_softPWM` t
 4) `DirectionPerception/dirPerAnalyze.py` then take `DirPer_8mtr_sub#.txt`, `DirPer_12mtr_sub#.txt`, and `DirPer_16mtr_sub#.txt` file to analyze and plot the average directional error across different experimental conditions (belt types and vibration schemes) for a given subject. There should be 3 plots generated from running this code.
 
 ## Open Loop (Discrete Control Navigation)
+In this experiment, participants navigated through seven waypoints using only belt cues, with movement controlled via W-A-S-D keys. 
 
 
 ## Closed Loop (Continuous Feedback Navigation)
