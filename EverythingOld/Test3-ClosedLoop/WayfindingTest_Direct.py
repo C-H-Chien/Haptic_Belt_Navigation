@@ -17,9 +17,6 @@ import vizshape
 
 from os.path import exists
 
-#import audioControls
-#import emergencyWallsNormal
-
 import lights
 import oculus
 import steamvr
@@ -30,13 +27,53 @@ import vizfx.postprocess
 import serial
 import struct
 
-#from random import random # for the random berry spawn location
 
-ser = serial.Serial('COM3')
+def updatemotor(reached_goal, motorToActivate):
+	if reached_goal == 1:
+		motorIntensities = numMotors * [250]
+		motorToActivate = vibrationCount % 8
+	else:
+		motorIntensities = numMotors * [0]
+		
+	if reached_goal == 2:
+		motorToActivate = vibrationCount % 8
+		motorIntensities[motorToActivate] = 0
+	if reached_goal == 0:
+		motorIntensities[motorToActivate] = 250
+	motorIntensities.reverse()
+	dataToSend = [255] + motorIntensities + [254]
+	for num in dataToSend:
+		ser.write(struct.pack('>B', num))
+		print(num)
+	confirmation = ser.readline() # Read the confirmation line
+	print "Arduino confirmation (hex): ", ''.join(['{:02x}'.format(ord(c)) for c in confirmation])
+	
+	
+####################################### testing motor function #######################################
+ser = serial.Serial('COM6', timeout=0.1)
 ser.baudrate= 115200
 
-# Defines the number of motors in the current run
 numMotors = 8
+
+for vibrationCount in range(2*numMotors):
+	print("testing motor # :" +str(vibrationCount%8))
+	updatemotor(0, vibrationCount%8)
+	tm.sleep(1)
+
+dataToSend = [255] + numMotors * [0] + [254]
+for num in dataToSend:
+	ser.write(struct.pack('>B', num))
+	#print(num)
+confirmation = ser.readline() # Read the confirmation line
+print "Arduino confirmation (hex): ", ''.join(['{:02x}'.format(ord(c)) for c in confirmation])
+tm.sleep(3)
+
+#print("done verifying motors")
+confirmation = ser.readline() # Read the confirmation line
+#print("Arduino confirmation: ", confirmation.hex())
+print("done testing motors")
+####################################### testing motor function #######################################
+
 
 # There are 4 possible levels of strength and 3 possible belt sizes
 strengths = [1,2,3,4] ; beltSizes = [8,12]
@@ -52,7 +89,7 @@ for size in beltSizes:
 # Defines the motors to fire for each of the cardinal directions
 # 0: N | 1: NE | 2: E | 3: SE | 4: S | 5: SW | 6: W | 7: NW | 8: STOP
 motors = {} ; motors[8] = {} ; motors[12] = {}
-motors[8][0] = [8] ; motors[8][1] = [1]
+motors[8][0] = [0] ; motors[8][1] = [1]
 motors[8][2] = [2] ; motors[8][3] = [3]
 motors[8][4] = [4] ; motors[8][5] = [5]
 motors[8][6] = [6] ; motors[8][7] = [7]
@@ -103,7 +140,7 @@ for size in beltSizes:
 # Control Options
 
 ODYSSEY = 'Odyssey'
-MONITOR = 'PC Monitor'
+MONITOR = 'PC Monitor' #keyboard control: wasd for 4 directions and y and h for looking up and down
 
 controlOptions = [MONITOR, ODYSSEY]
 controlType = controlOptions[viz.choose('How would you like to explore? ', controlOptions)]
@@ -138,7 +175,7 @@ viz.go()
 
 viz.clearcolor(0,0.4,1.0) # blue sky
 
-viz.add('Models/ground4.3DS') # ground plane
+viz.add('ground4.3DS') # ground plane
 
 text_score = viz.addText('BLANK',parent=viz.SCREEN) # display info on the screen
 text_score.setPosition(0,0.9)
@@ -160,19 +197,22 @@ recordPos = numpy.array([]) ; recordOrient = numpy.array([]) ; finished = 0
 motionModel = 'go_north'
 motionModel = 'go_to_pole'
 
-polePosition1 = [3, 0, 3]
-polePosition2 = [3, 0, -2] # x,y,z where y is vertical axis
-polePosition3 = [-3, 0, -2]
+polePosition1 = [2, 0, 1]
+polePosition2 = [2, 0, -1] # x,y,z where y is vertical axis
+polePosition3 = [-2, 0, -1]
 
 if motionModel=='go_to_pole':
 	pole1= vizshape.addCylinder(height = 1.9, radius = 0.1, yAlign=vizshape.ALIGN_MIN)
 	pole2 = vizshape.addCylinder(height = 1.9, radius = 0.1, yAlign=vizshape.ALIGN_MIN)
 	pole3 = vizshape.addCylinder(height = 1.9, radius = 0.1, yAlign=vizshape.ALIGN_MIN)
+	
 	pole1.color(viz.BLACK) ; pole2.color(viz.GREEN) ; pole3.color(viz.BLUE)
 
 	pole1.setPosition(polePosition1)
 	pole2.setPosition(polePosition2)
 	pole3.setPosition(polePosition3)
+	
+
 
 
 def masterLoop(num):
@@ -181,8 +221,6 @@ def masterLoop(num):
 	curRot = viz.get(viz.HEAD_ORI) # yaw, pitch, roll (or maybe yaw, roll, pitch)
 	timeElapsed = viz.getFrameElapsed()
 	time += timeElapsed
-#	audioControls.audioFinishedCheck()
-#	emergencyWallsNormal.popWalls(curPos)
 
 	if motionModel=='go_north':
 		desiredAngle = 0
@@ -203,6 +241,7 @@ def masterLoop(num):
 	compassNeedle.setPosition(curPos[0],0,curPos[2])
 	compassNeedle.setEuler(desiredAngle,0,0)
 	screenMessage = " Current Angle: %d\n Desired: %d" % (curRot[0],desiredAngle)
+	print("current position is: (" + str(curPos[0]) + ", " + str(curPos[2]) + ")")
 	text_score.message(screenMessage)
 
 	angleError = curRot[0]-desiredAngle
@@ -232,14 +271,21 @@ def masterLoop(num):
 		numpy.save('orientations_1D.npy', recordOrient)
 
 
-	print(directionsToSend[numMotors][4][index])
+	print("index is: " + str(index) + ", distance to pole is: " + str(distToDest) + "finish status: " + str(finished))
 	if index == 8:
-		for num in directionsToSend[numMotors][4][index]:
-			ser.write(struct.pack('>B', num))
+		# reached one pole, all viberate for 5 sec
+		print("reached pole: " + str(finished))
+		updatemotor(1, index)
+		tm.sleep(2)
+		updatemotor(2, index)
 		start = tm.time()
+
 	elif tm.time() - start > 0.05:
-		for num in directionsToSend[numMotors][4][index]:
-			ser.write(struct.pack('>B',num))
+		updatemotor(0, index)
+		print "Arduino confirmation (hex): ", ''.join(['{:02x}'.format(ord(c)) for c in confirmation])
+		#tm.sleep(1)
+		#updatemotor(2, index)
+		#tm.sleep(1)
 		start = tm.time()
 	if tm.time() - record > 1 and finished < 2:
 		recordPos = numpy.append(recordPos, curPos) ; recordOrient = numpy.append(recordOrient, curRot)
