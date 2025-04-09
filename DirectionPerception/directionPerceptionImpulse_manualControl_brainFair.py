@@ -264,12 +264,12 @@ def resetTest(port,numMotors):
 
 
    #Initialize display to starting screen
-   initializeDisplay()
+   initializeDisplay(numMotors)
 
 
 
 
-def initializeDisplay():
+def initializeDisplay(numMotors):
    """
    Initializes the display before the experiment begins
    """
@@ -296,7 +296,7 @@ def initializeDisplay():
                                                     int(constants.DISPLAY_SIZE[1]/2)+constants.CIRCLE_SHIFT), constants.OUTER_RAD)
 
    #Add lines to and markers to indicate angles
-   for angle in np.linspace(-22.5, 337.5, 9, True):
+   for angle in np.linspace(-360/2/numMotors, 360-360/2/numMotors, numMotors+1, True):
        x = constants.OUTER_RAD*math.sin(angle*math.pi/180)
        y = constants.OUTER_RAD*math.cos(angle*math.pi/180)
        start = (outerCirc.center[0],outerCirc.center[1])
@@ -496,8 +496,8 @@ def main():
 
 
    # Define the port and number of motors
-   port = '/dev/tty.usbmodem21101'
-   numMotors = 8  # The number of motors present on the haptic belt
+   port = '/dev/tty.usbmodem101'
+   numMotors = 16  # The number of motors present on the haptic belt
 
 
    # Call the function to start the test
