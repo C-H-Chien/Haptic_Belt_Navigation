@@ -496,7 +496,7 @@ def main():
 
 
    # Define the port and number of motors
-   port = '/dev/tty.usbmodem101'
+   port = '/dev/tty.usbmodem101' #1101
    numMotors = 16  # The number of motors present on the haptic belt
 
 

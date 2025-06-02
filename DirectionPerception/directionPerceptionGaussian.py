@@ -525,7 +525,7 @@ def main():
         sys.exit(1)
 
     # Define the port, number of motors, and subject ID
-    port = '/dev/ttyACM0'
+    port = '/dev/tty.usbmodem1101'
     numMotors = 16  # The number of motors present on the haptic belt. 
     # width = 3: 3 adjacent motors vibrating with: 200, 250, 200
     # width = 5: 5 adjacent motors vibrating with: 100, 200, 250, 200, 100
