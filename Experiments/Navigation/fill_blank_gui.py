@@ -2,7 +2,7 @@ import tkinter as tk
 import os
 import sys
 
-def submit_fill_in(subID, experiment_type, strategy_text, change_vibrations_text, other_observations_text, root):
+def submit_fill_in(subID, strategy_text, change_vibrations_text, other_observations_text, root):
     """Gather data from the UI, save it to a file, and close the application."""
     strategy = strategy_text.get("1.0", tk.END).strip()
     change_vibrations = change_vibrations_text.get("1.0", tk.END).strip()
@@ -13,7 +13,7 @@ def submit_fill_in(subID, experiment_type, strategy_text, change_vibrations_text
     os.makedirs(folder_path, exist_ok=True)
 
     # Open the file and append the additional responses
-    filename = f"response_text_{subID}_{experiment_type}.txt"
+    filename = f"response_text_{subID}.txt"
     with open(os.path.join(folder_path, filename), 'a') as file:
         file.write(f"Strategy Used: {strategy}\n")
         file.write(f"Vibration change: {change_vibrations}\n")
@@ -22,27 +22,34 @@ def submit_fill_in(subID, experiment_type, strategy_text, change_vibrations_text
     print("Response saved successfully!")
     root.destroy()  # Close the window
 
-def main_fill_in(subID, experiment_type):
+def main_fill_in(subID):
     root = tk.Tk()
     root.title("Tactile Belt Experiment Questionnaire - Fill in the Blank")
 
+    #Font configuration
+    question_font = ('Arial', 17)
+    large_font = ('Arial', 17)
+
     # Text entry for strategies and observations
-    tk.Label(root, text="Did you use any particular strategy for using the vibrations to walk towards the goal? \nIf so, please describe that strategy.", justify="left").grid(row=0, column=0, padx=10, pady=10, sticky="NW")
-    strategy_text = tk.Text(root, height=4, width=80)
+    tk.Label(root, text="Did you use any particular strategy for using the vibrations to walk towards the goal? \nIf so, please describe that strategy.", font=question_font, 
+             justify="left").grid(row=0, column=0, padx=10, pady=10, sticky="NW")
+    strategy_text = tk.Text(root, font=large_font, height=10, width=70)
     strategy_text.grid(row=0, column=1, padx=10, pady=10, sticky="W")
 
-    tk.Label(root, text="Did you notice any change to the vibrations when getting closer to the goal? \nIf so, did this help you navigate to the goal more efficiently?", justify="left").grid(row=1, column=0, padx=10, pady=10, sticky="NW")
-    change_vibrations_text = tk.Text(root, height=4, width=80)
+    tk.Label(root, text="Did you notice any change to the vibrations when getting closer to the goal? \nIf so, did this help you navigate to the goal more efficiently?", font=question_font, 
+             justify="left").grid(row=1, column=0, padx=10, pady=10, sticky="NW")
+    change_vibrations_text = tk.Text(root, font=large_font, height=10, width=70)
     change_vibrations_text.grid(row=1, column=1, padx=10, pady=10, sticky="W")
 
-    tk.Label(root, text="Is there anything else you noticed about the experiment that you would like to share?", justify="left").grid(row=2, column=0, padx=10, pady=10, sticky="NW")
-    other_observations_text = tk.Text(root, height=4, width=80)
+    tk.Label(root, text="Is there anything else you noticed about the experiment that you would like to share?", font=question_font, 
+             justify="left").grid(row=2, column=0, padx=10, pady=10, sticky="NW")
+    other_observations_text = tk.Text(root, font=large_font, height=10, width=70)
     other_observations_text.grid(row=2, column=1, padx=10, pady=10, sticky="W")
 
     
 
     # Submit button
-    submit_btn = tk.Button(root, text="Submit", command=lambda: submit_fill_in(subID, experiment_type, strategy_text, change_vibrations_text, other_observations_text, root))
+    submit_btn = tk.Button(root, text="Submit", font=large_font, command=lambda: submit_fill_in(subID, strategy_text, change_vibrations_text, other_observations_text, root))
     submit_btn.grid(row=3, columnspan=2, pady=20)
 
     root.mainloop()
@@ -64,17 +71,30 @@ def get_subject_id():
     root.mainloop()
     return subject_id
 
-if __name__ == "__main__":
-    subID = get_subject_id()
-    if subID is None:
-        print("No Subject ID provided.")
-        sys.exit(1)
+def get_subject_id():
+    def on_submit():
+        nonlocal subject_id
+        subject_id = entry.get()
+        root.destroy()
 
-    # Convert subject_id to integer if necessary
-    try:
-        subID = int(subID)
-    except ValueError:
-        print("Invalid Subject ID. Please enter a valid integer.")
-        sys.exit(1)
-    experiment_type = "impulse"
-    main_fill_in(subID, experiment_type)
+    subject_id = None
+    root = tk.Tk()
+    tk.Label(root, text="Enter Subject ID:").pack(side="top", fill="x", padx=20, pady=10)
+    entry = tk.Entry(root)
+    entry.pack(padx=20, pady=20)
+    submit_button = tk.Button(root, text="Submit", command=on_submit)
+    submit_button.pack(pady=10)
+    root.mainloop()
+    return subject_id
+
+if __name__ == "__main__":
+    
+    if len(sys.argv) > 1:
+        subID = sys.argv[1]
+    else:
+        subID = get_subject_id()
+        if subID is None:
+            print("No Subject ID provided.")
+            sys.exit(1)
+
+    main_fill_in(subID)
