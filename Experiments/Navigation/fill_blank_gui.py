@@ -27,17 +27,17 @@ def main_fill_in(subID, experiment_type):
     root.title("Tactile Belt Experiment Questionnaire - Fill in the Blank")
 
     # Text entry for strategies and observations
-    tk.Label(root, text="Did you use any particular strategy in making your \nresponses? If so, please describe that strategy.").grid(row=0, column=0, padx=10, pady=10)
-    strategy_text = tk.Text(root, height=4, width=40)
-    strategy_text.grid(row=0, column=1, padx=10, pady=10)
+    tk.Label(root, text="Did you use any particular strategy for using the vibrations to walk towards the goal? \nIf so, please describe that strategy.", justify="left").grid(row=0, column=0, padx=10, pady=10, sticky="NW")
+    strategy_text = tk.Text(root, height=4, width=80)
+    strategy_text.grid(row=0, column=1, padx=10, pady=10, sticky="W")
 
-    tk.Label(root, text="Did you notice any change to the vibrations when \ngetting closer or farther away from the target? \nIf so, did this help you navigate to the target \nwaypoint more efficiently?").grid(row=1, column=0, padx=10, pady=10)
-    change_vibrations_text = tk.Text(root, height=4, width=40)
-    change_vibrations_text.grid(row=1, column=1, padx=10, pady=10)
+    tk.Label(root, text="Did you notice any change to the vibrations when getting closer to the goal? \nIf so, did this help you navigate to the goal more efficiently?", justify="left").grid(row=1, column=0, padx=10, pady=10, sticky="NW")
+    change_vibrations_text = tk.Text(root, height=4, width=80)
+    change_vibrations_text.grid(row=1, column=1, padx=10, pady=10, sticky="W")
 
-    tk.Label(root, text="Is there anything else you noticed about the \nexperiment that you would like to share?").grid(row=2, column=0, padx=10, pady=10)
-    other_observations_text = tk.Text(root, height=4, width=40)
-    other_observations_text.grid(row=2, column=1, padx=10, pady=10)
+    tk.Label(root, text="Is there anything else you noticed about the experiment that you would like to share?", justify="left").grid(row=2, column=0, padx=10, pady=10, sticky="NW")
+    other_observations_text = tk.Text(root, height=4, width=80)
+    other_observations_text.grid(row=2, column=1, padx=10, pady=10, sticky="W")
 
     
 
