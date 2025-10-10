@@ -1,0 +1,3 @@
+Strategy Used: wait for initial vibration, turn toward the goal, then walk straight
+Vibration change: closer=faster did help a bit
+Other Observations: the experiments were a bit too long for comfortable wear of the headset, i wanted to take a break a few times in the middle of each section (not the training part, but the longer 'blind' sessions.
