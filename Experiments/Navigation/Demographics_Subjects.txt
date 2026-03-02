@@ -1,0 +1,23 @@
+# demographics of participants for the Direction Perception Experiment 
+# Carried out between 06/18/25 - 19/17/25
+# id gender race age
+#01 m a 28
+#02 f a 21
+#03 f w 26
+04 male white 32
+05 female other 29
+06 female a/w 29
+07 female asian 22
+08 female African-American 23
+09 male asian 24
+10 female asian 29
+11 male white 26
+12 female white 25
+13 female asian 23
+14 male asian 28
+15 male asian 29
+16 male asian 32
+17 male white 35
+18 male hispanic 22
+19 female other 31
+
